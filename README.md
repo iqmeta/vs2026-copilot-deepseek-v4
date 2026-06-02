@@ -14,22 +14,23 @@ A high-performance, ultra-low-overhead HTTP proxy that connects GitHub Copilot a
 | 🏷️ | Details |
 |---|---|
 | **Author** | iqmeta GmbH — Otto Neff |
-| **Version** | `2026.05.09` |
+| **Version** | `2026.06.02` |
 | **Model** | `deepseek-v4-flash` (configurable) |
 | **Default Port** | `5000` |
 | **Framework** | .NET 10 |
+| **Deploy** | Docker / bare metal |
 
 ---
 
 ## Screenshots
 
 <p align="center">
-  <img src="github_copilot_deepseek_v4-0.jpg" alt="DeepSeek Copilot Proxy Screenshot 1" width="45%" />
-  <img src="github_copilot_deepseek_v4-1.jpg" alt="DeepSeek Copilot Proxy Screenshot 2" width="45%" />
+  <img src="images/github_copilot_deepseek_v4-0.jpg" alt="DeepSeek Copilot Proxy Screenshot 1" width="45%" />
+  <img src="images/github_copilot_deepseek_v4-1.jpg" alt="DeepSeek Copilot Proxy Screenshot 2" width="45%" />
 </p>
 <p align="center">
-  <img src="github_copilot_deepseek_v4-2.jpg" alt="DeepSeek Copilot Proxy Screenshot 3" width="45%" />
-  <img src="github_copilot_deepseek_v4-3.jpg" alt="DeepSeek Copilot Proxy Screenshot 4" width="45%" />
+  <img src="images/github_copilot_deepseek_v4-2.jpg" alt="DeepSeek Copilot Proxy Screenshot 3" width="45%" />
+  <img src="images/github_copilot_deepseek_v4-3.jpg" alt="DeepSeek Copilot Proxy Screenshot 4" width="45%" />
 </p>
 
 
@@ -44,7 +45,9 @@ A high-performance, ultra-low-overhead HTTP proxy that connects GitHub Copilot a
   - **Ollama-compatible** endpoints (`GET /api/tags`, `POST /api/chat`) — works with any Ollama client.
 - **⚡ Ultra-Performance** — Uses `SocketsHttpHandler` with connection pooling (256 connections/server, HTTP/2 multiplexing), `SlimBuilder`, and pass-through streaming.
 - **📦 Zero Allocation Streaming** — SSE (Server-Sent Events) are streamed through without buffering, with minimal allocations during parsing.
-- **🔌 No External Dependencies** — Uses only built-in ASP.NET Core and `System.Text.Json`; YARP is included but unused for the core proxy functionality.
+- **🔌 No External Dependencies** — Uses only built-in ASP.NET Core and `System.Text.Json`.
+- **🐳 Docker-Ready** — Multi-stage Dockerfile (chiseled runtime, ~40 MB overhead) and `docker-compose.yml` included.
+- **🔐 Optional Proxy Auth** — Set `PROXY_API_KEY` to require `Bearer` authentication on all endpoints.
 
 ---
 
@@ -52,25 +55,35 @@ A high-performance, ultra-low-overhead HTTP proxy that connects GitHub Copilot a
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or [Docker](https://www.docker.com/)
 - A DeepSeek API key
 
-### 1. Configure API Key
+### 1. Configure
 
-Open `Program.cs` and set your DeepSeek API key:
+Copy `.env.example` to `.env` and set your API key:
 
-```csharp
-const string API_KEY = "sk-your-deepseek-api-key-here";
+```bash
+cp .env.example .env
+# Edit .env → set DEEPSEEK_API_KEY=sk-your-real-key
 ```
 
-You can also change the model and port:
+All configuration lives in environment variables:
 
-```csharp
-const string MODEL = "deepseek-v4-flash";   // or "deepseek-chat", etc.
-const int PORT = 5000;
+| Variable | Default | Description |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | *required* | Your DeepSeek API key |
+| `DEEPSEEK_MODEL` | `deepseek-v4-flash` | Model to proxy (`deepseek-chat`, etc.) |
+| `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | Upstream API base URL |
+| `PROXY_PORT` | `5000` | Port the proxy listens on |
+| `PROXY_API_KEY` | *optional* | If set, clients must send `Authorization: Bearer <key>` |
+
+### 2a. Run with Docker (recommended)
+
+```bash
+docker compose up -d
 ```
 
-### 2. Run
+### 2b. Run bare metal
 
 ```bash
 dotnet run
@@ -80,10 +93,11 @@ You should see:
 
 ```
 ╔════════════════════════════════════════╗
-║   DeepSeek Copilot Proxy (Ultra)      ║
+║   DeepSeek Copilot Proxy (Ultra)       ║
 ╠════════════════════════════════════════╣
 ║  Model:   deepseek-v4-flash            ║
-║  URL:     http://localhost:5000/v1      ║
+║  URL:     http://localhost:5000/v1     ║
+║  Auth:    open (no key set)            ║
 ╚════════════════════════════════════════╝
 ```
 
@@ -140,6 +154,21 @@ Configure your Copilot client to use the proxy:
       "provider": "openai",
       "endpoint": "http://localhost:5000/v1/chat/completions",
       "model": "deepseek-v4-flash"
+    }
+  }
+}
+```
+
+If `PROXY_API_KEY` is set, add the auth header:
+
+```json
+{
+  "github.copilot.advanced": {
+    "debug.chatOverride": {
+      "provider": "openai",
+      "endpoint": "http://localhost:5000/v1/chat/completions",
+      "model": "deepseek-v4-flash",
+      "apiKey": "your-proxy-key"
     }
   }
 }
@@ -218,7 +247,7 @@ Adjust these in `Program.cs` based on your workload.
 ```
 
 <p align="center">
-  <img src="github_copilot_deepseek_v4-0.jpg" alt="Architecture overview" width="80%" />
+  <img src="images/github_copilot_deepseek_v4-0.jpg" alt="Architecture overview" width="80%" />
 </p>
 
 The proxy is a single-file .NET application using:

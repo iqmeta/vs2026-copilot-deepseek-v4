@@ -10,11 +10,13 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-// ─── Config ──────────────────────────────────────────────────────────
-const string API_KEY = "sk-";
-const string BASE_URL = "https://api.deepseek.com";
-const string MODEL = "deepseek-v4-flash";
-const int PORT = 5000;
+// ─── Config (from environment) ───────────────────────────────────────
+string API_KEY = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY")
+    ?? throw new InvalidOperationException("DEEPSEEK_API_KEY environment variable is required");
+string BASE_URL = Environment.GetEnvironmentVariable("DEEPSEEK_BASE_URL") ?? "https://api.deepseek.com";
+string MODEL = Environment.GetEnvironmentVariable("DEEPSEEK_MODEL") ?? "deepseek-v4-pro";
+int PORT = int.TryParse(Environment.GetEnvironmentVariable("PROXY_PORT"), out int p) ? p : 5000;
+string? PROXY_API_KEY = Environment.GetEnvironmentVariable("PROXY_API_KEY");
 
 // ─── State ───────────────────────────────────────────────────────────
 ConcurrentDictionary<string, string> ReasoningCache = new(StringComparer.Ordinal);
@@ -28,11 +30,11 @@ JsonSerializerOptions JsonOpts = new()
 };
 
 // ─── Builder ─────────────────────────────────────────────────────────
-var builder = WebApplication.CreateSlimBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(args);
 builder.WebHost.UseUrls($"http://0.0.0.0:{PORT}");
 
 // Max-performance HTTP handler
-var handler = new SocketsHttpHandler
+SocketsHttpHandler handler = new()
 {
     EnableMultipleHttp2Connections = true,
     MaxConnectionsPerServer = 256,
@@ -45,7 +47,7 @@ var handler = new SocketsHttpHandler
     PreAuthenticate = false
 };
 
-var httpClient = new HttpClient(handler)
+HttpClient httpClient = new(handler)
 {
     Timeout = TimeSpan.FromMinutes(5),
     BaseAddress = new Uri(BASE_URL)
@@ -53,7 +55,27 @@ var httpClient = new HttpClient(handler)
 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", API_KEY);
 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-var app = builder.Build();
+WebApplication app = builder.Build();
+
+// ─── Optional proxy auth middleware ─────────────────────────────────
+if (!string.IsNullOrEmpty(PROXY_API_KEY))
+{
+    app.Use(async (ctx, next) =>
+    {
+        string? auth = ctx.Request.Headers.Authorization;
+        if (auth != null && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+            && auth["Bearer ".Length..] == PROXY_API_KEY)
+        {
+            await next();
+        }
+        else
+        {
+            ctx.Response.StatusCode = 401;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsync("""{"error":"unauthorized"}""");
+        }
+    });
+}
 
 // ─── GET /v1/models ──────────────────────────────────────────────────
 app.MapGet("/v1/models", () =>
@@ -62,8 +84,7 @@ app.MapGet("/v1/models", () =>
         @object = "list",
         data = new[]
         {
-            new { id = MODEL, @object = "model", created = 1700000000, owned_by = "deepseek" },
-            new { id = "deepseek-chat", @object = "model", created = 1700000000, owned_by = "deepseek" }
+            new { id = MODEL, @object = "model", created = 1700000000, owned_by = "deepseek" }
         }
     }, JsonOpts));
 
@@ -73,29 +94,29 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok", model = MODEL }));
 // ─── POST /v1/chat/completions ──────────────────────────────────────
 app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
 {
-    var ct = ctx.RequestAborted;
+    CancellationToken ct = ctx.RequestAborted;
     
     // Read and parse request
-    using var bodyReader = new StreamReader(ctx.Request.Body, Encoding.UTF8, false, 1024);
-    var rawBody = await bodyReader.ReadToEndAsync(ct);
+    using StreamReader bodyReader = new(ctx.Request.Body, Encoding.UTF8, false, 1024);
+    string rawBody = await bodyReader.ReadToEndAsync(ct);
     
-    using var doc = JsonDocument.Parse(rawBody);
-    var root = doc.RootElement;
-    var isStream = root.TryGetProperty("stream", out var sp) && sp.GetBoolean();
-    
+    using JsonDocument doc = JsonDocument.Parse(rawBody);
+    JsonElement root = doc.RootElement;
+    bool isStream = root.TryGetProperty("stream", out JsonElement sp) && sp.GetBoolean();
+
     // Inject cached reasoning_content and override model
-    var modified = ModifyRequest(doc);
-    var bodyText = modified ?? rawBody;
+    string? modified = ModifyRequest(doc);
+    string bodyText = modified ?? rawBody;
     
     // For non-streaming: direct proxy via HttpClient
     if (!isStream)
     {
-        using var content = new StringContent(bodyText, Encoding.UTF8, "application/json");
-        using var response = await httpClient.SendAsync(
+        using StringContent content = new(bodyText, Encoding.UTF8, "application/json");
+        using HttpResponseMessage response = await httpClient.SendAsync(
             new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = content },
             ct);
-        
-        var respBody = await response.Content.ReadAsStringAsync(ct);
+
+        string respBody = await response.Content.ReadAsStringAsync(ct);
         
         if (response.IsSuccessStatusCode)
             CacheReasoningFromResponse(respBody);
@@ -112,19 +133,19 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
     ctx.Response.Headers.CacheControl = "no-cache";
     ctx.Response.Headers["X-Accel-Buffering"] = "no";
     
-    using var reqContent = new StringContent(bodyText, Encoding.UTF8, "application/json");
-    using var upstreamReq = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions")
+    using StringContent reqContent = new(bodyText, Encoding.UTF8, "application/json");
+    using HttpRequestMessage upstreamReq = new(HttpMethod.Post, "/v1/chat/completions")
     {
         Content = reqContent
     };
     upstreamReq.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
     
-    using var upstreamResp = await httpClient.SendAsync(
+    using HttpResponseMessage upstreamResp = await httpClient.SendAsync(
         upstreamReq, HttpCompletionOption.ResponseHeadersRead, ct);
     
     if (!upstreamResp.IsSuccessStatusCode)
     {
-        var errBody = await upstreamResp.Content.ReadAsStringAsync(ct);
+        string errBody = await upstreamResp.Content.ReadAsStringAsync(ct);
         ctx.Response.StatusCode = (int)upstreamResp.StatusCode;
         ctx.Response.ContentType = "application/json";
         await ctx.Response.WriteAsync(errBody, ct);
@@ -154,33 +175,34 @@ app.MapGet("/api/tags", () =>
 // ─── Ollama /api/chat ────────────────────────────────────────────────
 app.MapPost("/api/chat", async (HttpContext ctx) =>
 {
-    var ct = ctx.RequestAborted;
-    using var reader = new StreamReader(ctx.Request.Body);
-    var body = await reader.ReadToEndAsync(ct);
-    using var doc = JsonDocument.Parse(body);
-    var root = doc.RootElement;
-    var isStream = root.TryGetProperty("stream", out var sp) && sp.GetBoolean();
-    
+    CancellationToken ct = ctx.RequestAborted;
+    using StreamReader reader = new(ctx.Request.Body);
+    string body = await reader.ReadToEndAsync(ct);
+    using JsonDocument doc = JsonDocument.Parse(body);
+    JsonElement root = doc.RootElement;
+    bool isStream = root.TryGetProperty("stream", out JsonElement sp) && sp.GetBoolean();
+
     // Convert Ollama messages to OpenAI format
-    var messages = new List<object>();
-    if (root.TryGetProperty("messages", out var omsgs))
+    List<object> messages = [];
+    if (root.TryGetProperty("messages", out JsonElement omsgs))
     {
-        foreach (var msg in omsgs.EnumerateArray())
+        foreach (JsonElement msg in omsgs.EnumerateArray())
         {
-            var role = msg.GetProperty("role").GetString()!;
-            var text = msg.TryGetProperty("content", out var c) ? c.GetString() ?? "" : "";
+            string role = msg.GetProperty("role").GetString()!;
+            string text = msg.TryGetProperty("content", out JsonElement c) ? c.GetString() ?? "" : "";
             
             object content;
-            if (msg.TryGetProperty("images", out var imgs) && imgs.GetArrayLength() > 0)
+            if (msg.TryGetProperty("images", out JsonElement imgs) && imgs.GetArrayLength() > 0)
             {
-                var parts = new List<object> { new { type = "text", text } };
-                foreach (var img in imgs.EnumerateArray())
+                List<object> parts = [new { type = "text", text }];
+                foreach (JsonElement img in imgs.EnumerateArray())
                 {
-                    var url = img.GetString()!;
+                    string url = img.GetString()!;
                     if (!url.StartsWith("data:") && !url.StartsWith("http"))
                         url = $"data:image/png;base64,{url}";
                     parts.Add(new { type = "image_url", image_url = new { url } });
                 }
+
                 content = parts;
             }
             else content = text;
@@ -188,25 +210,25 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
             messages.Add(new { role, content });
         }
     }
-    
-    var reqObj = new Dictionary<string, object?>
+
+    Dictionary<string, object?> reqObj = new()
     {
         ["model"] = MODEL,
         ["messages"] = messages,
         ["stream"] = isStream,
         ["max_tokens"] = 8192
     };
-    if (root.TryGetProperty("tools", out var tools))
+    if (root.TryGetProperty("tools", out JsonElement tools))
         reqObj["tools"] = tools;
-    
-    var reqJson = JsonSerializer.Serialize(reqObj, JsonOpts);
-    using var reqContent = new StringContent(reqJson, Encoding.UTF8, "application/json");
+
+    string reqJson = JsonSerializer.Serialize(reqObj, JsonOpts);
+    using StringContent reqContent = new(reqJson, Encoding.UTF8, "application/json");
     
     if (!isStream)
     {
-        using var resp = await httpClient.SendAsync(
+        using HttpResponseMessage resp = await httpClient.SendAsync(
             new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = reqContent }, ct);
-        var respBody = await resp.Content.ReadAsStringAsync(ct);
+        string respBody = await resp.Content.ReadAsStringAsync(ct);
         
         if (!resp.IsSuccessStatusCode)
         {
@@ -217,9 +239,9 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
         
         CacheReasoningFromResponse(respBody);
         
-        using var odoc = JsonDocument.Parse(respBody);
-        var msg = odoc.RootElement.GetProperty("choices")[0].GetProperty("message");
-        var ollamaResp = new Dictionary<string, object?>
+        using JsonDocument odoc = JsonDocument.Parse(respBody);
+        JsonElement msg = odoc.RootElement.GetProperty("choices")[0].GetProperty("message");
+        Dictionary<string, object?> ollamaResp = new()
         {
             ["model"] = MODEL,
             ["created_at"] = DateTime.UtcNow.ToString("o"),
@@ -231,7 +253,7 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
             ["done"] = true,
             ["done_reason"] = "stop"
         };
-        if (msg.TryGetProperty("tool_calls", out var tcs))
+        if (msg.TryGetProperty("tool_calls", out JsonElement tcs))
             ((Dictionary<string, object?>)ollamaResp["message"]!)["tool_calls"] = tcs;
         
         ctx.Response.ContentType = "application/json";
@@ -243,13 +265,13 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
         ctx.Response.ContentType = "text/event-stream";
         ctx.Response.Headers["X-Accel-Buffering"] = "no";
         
-        using var upstreamReq = new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions")
+        using HttpRequestMessage upstreamReq = new(HttpMethod.Post, "/v1/chat/completions")
         {
             Content = reqContent
         };
         upstreamReq.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
         
-        using var upstreamResp = await httpClient.SendAsync(
+        using HttpResponseMessage upstreamResp = await httpClient.SendAsync(
             upstreamReq, HttpCompletionOption.ResponseHeadersRead, ct);
         
         if (!upstreamResp.IsSuccessStatusCode)
@@ -261,11 +283,12 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
 
 // ─── Start ───────────────────────────────────────────────────────────
 Console.WriteLine($"╔════════════════════════════════════════╗");
-Console.WriteLine($"║   DeepSeek Copilot Proxy (Ultra)      ║");
+Console.WriteLine($"║   DeepSeek Copilot Proxy (Ultra)       ║");
 Console.WriteLine($"╠════════════════════════════════════════╣");
-Console.WriteLine($"║  Version: 2026.05.09                  ║");
-Console.WriteLine($"║  Model:   {MODEL,-32} ║");
-Console.WriteLine($"║  URL:     http://localhost:{PORT}/v1      ║");
+Console.WriteLine($"║  Version: 2026.06.02                   ║");
+Console.WriteLine($"║  Model:   {MODEL,-32}                  ║");
+Console.WriteLine($"║  URL:     http://localhost:{PORT}/v1   ║");
+Console.WriteLine($"║  Auth:    {(string.IsNullOrEmpty(PROXY_API_KEY) ? "open (no key set)" : "required (PROXY_API_KEY)"),-18} ║");
 Console.WriteLine($"╚════════════════════════════════════════╝");
 app.Run();
 
@@ -275,23 +298,24 @@ app.Run();
 
 string? ModifyRequest(JsonDocument doc)
 {
-    var root = doc.RootElement;
-    if (!root.TryGetProperty("messages", out var msgs))
+    JsonElement root = doc.RootElement;
+    if (!root.TryGetProperty("messages", out JsonElement msgs))
         return null;
     
     int idx = 0;
     bool modified = false;
-    using var ms = new MemoryStream();
-    using var w = new Utf8JsonWriter(ms);
+    using MemoryStream ms = new();
+    using Utf8JsonWriter w = new(ms);
     
     w.WriteStartObject();
-    foreach (var prop in root.EnumerateObject())
+    foreach (JsonProperty prop in root.EnumerateObject())
     {
         if (prop.NameEquals("model"))
         {
             w.WriteString("model", MODEL);
             continue;
         }
+
         if (!prop.NameEquals("messages"))
         {
             prop.WriteTo(w);
@@ -300,19 +324,19 @@ string? ModifyRequest(JsonDocument doc)
         
         w.WritePropertyName("messages");
         w.WriteStartArray();
-        foreach (var msg in msgs.EnumerateArray())
+        foreach (JsonElement msg in msgs.EnumerateArray())
         {
-            var role = msg.TryGetProperty("role", out var r) ? r.GetString() : null;
+            string? role = msg.TryGetProperty("role", out JsonElement r) ? r.GetString() : null;
             if (role == "assistant")
             {
-                bool hasTc = msg.TryGetProperty("tool_calls", out var tcArr) && tcArr.GetArrayLength() > 0;
+                bool hasTc = msg.TryGetProperty("tool_calls", out JsonElement tcArr) && tcArr.GetArrayLength() > 0;
                 string? key = null;
                 
                 if (hasTc)
                 {
-                    var ids = new List<string>();
-                    foreach (var tc in tcArr.EnumerateArray())
-                        if (tc.TryGetProperty("id", out var idE) && idE.ValueKind == JsonValueKind.String)
+                    List<string> ids = [];
+                    foreach (JsonElement tc in tcArr.EnumerateArray())
+                        if (tc.TryGetProperty("id", out JsonElement idE) && idE.ValueKind == JsonValueKind.String)
                             ids.Add(idE.GetString()!);
                     if (ids.Count > 0) key = $"toolcall:{string.Join("|", ids)}";
                 }
@@ -321,16 +345,16 @@ string? ModifyRequest(JsonDocument doc)
                     key = $"assistant:{idx++}";
                 }
                 
-                if (key != null && ReasoningCache.TryGetValue(key, out var rc))
+                if (key != null && ReasoningCache.TryGetValue(key, out string? rc))
                 {
-                    bool needsInject = !msg.TryGetProperty("reasoning_content", out var exRc)
+                    bool needsInject = !msg.TryGetProperty("reasoning_content", out JsonElement exRc)
                         || exRc.ValueKind != JsonValueKind.String
                         || string.IsNullOrEmpty(exRc.GetString());
                     
                     if (needsInject)
                     {
                         w.WriteStartObject();
-                        foreach (var mp in msg.EnumerateObject())
+                        foreach (JsonProperty mp in msg.EnumerateObject())
                             mp.WriteTo(w);
                         w.WriteString("reasoning_content", rc);
                         w.WriteEndObject();
@@ -339,10 +363,13 @@ string? ModifyRequest(JsonDocument doc)
                     }
                 }
             }
+
             msg.WriteTo(w);
         }
+
         w.WriteEndArray();
     }
+
     w.WriteEndObject();
     w.Flush();
     
@@ -353,20 +380,20 @@ void CacheReasoningFromResponse(string json)
 {
     try
     {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        if (!root.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0) return;
-        
-        var msg = choices[0].TryGetProperty("message", out var m) ? m : choices[0].TryGetProperty("delta", out var d) ? d : default;
+        using JsonDocument doc = JsonDocument.Parse(json);
+        JsonElement root = doc.RootElement;
+        if (!root.TryGetProperty("choices", out JsonElement choices) || choices.GetArrayLength() == 0) return;
+
+        JsonElement msg = choices[0].TryGetProperty("message", out JsonElement m) ? m : choices[0].TryGetProperty("delta", out JsonElement d) ? d : default;
         if (msg.ValueKind == JsonValueKind.Undefined) return;
-        if (!msg.TryGetProperty("reasoning_content", out var rc) || string.IsNullOrEmpty(rc.GetString())) return;
+        if (!msg.TryGetProperty("reasoning_content", out JsonElement rc) || string.IsNullOrEmpty(rc.GetString())) return;
         
         string key;
-        if (msg.TryGetProperty("tool_calls", out var tcs) && tcs.GetArrayLength() > 0)
+        if (msg.TryGetProperty("tool_calls", out JsonElement tcs) && tcs.GetArrayLength() > 0)
         {
-            var ids = new List<string>();
-            foreach (var tc in tcs.EnumerateArray())
-                if (tc.TryGetProperty("id", out var idE) && idE.ValueKind == JsonValueKind.String)
+            List<string> ids = [];
+            foreach (JsonElement tc in tcs.EnumerateArray())
+                if (tc.TryGetProperty("id", out JsonElement idE) && idE.ValueKind == JsonValueKind.String)
                     ids.Add(idE.GetString()!);
             key = $"toolcall:{string.Join("|", ids)}";
         }
@@ -382,57 +409,59 @@ void CacheReasoningFromResponse(string json)
 
 async Task StreamAndCache(HttpResponseMessage upstream, HttpResponse downstream, CancellationToken ct)
 {
-    using var upstreamStream = await upstream.Content.ReadAsStreamAsync(ct);
-    using var reader = new StreamReader(upstreamStream);
-    await using var writer = new StreamWriter(downstream.Body, leaveOpen: true) { NewLine = "\n" };
-    
-    var sb = new StringBuilder(4096);
+    using Stream upstreamStream = await upstream.Content.ReadAsStreamAsync(ct);
+    using StreamReader reader = new(upstreamStream);
+    await using StreamWriter writer = new(downstream.Body, leaveOpen: true) { NewLine = "\n" };
+
+    StringBuilder sb = new(4096);
     List<string>? tcIds = null;
     bool hasTc = false;
     int? asstIdx = null;
     
     while (true)
     {
-        var line = await reader.ReadLineAsync(ct);
+        string? line = await reader.ReadLineAsync(ct);
         if (line == null) break;
         
         if (line.StartsWith("data:"))
         {
-            var json = line.Substring(5).TrimStart();
+            string json = line.Substring(5).TrimStart();
             if (json.Length > 0 && json != "[DONE]")
             {
                 try
                 {
-                    using var chunk = JsonDocument.Parse(json);
-                    var cr = chunk.RootElement;
-                    if (cr.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
+                    using JsonDocument chunk = JsonDocument.Parse(json);
+                    JsonElement cr = chunk.RootElement;
+                    if (cr.TryGetProperty("choices", out JsonElement choices) && choices.GetArrayLength() > 0)
                     {
-                        var delta = choices[0].TryGetProperty("delta", out var d) ? d
-                            : choices[0].TryGetProperty("message", out var mm) ? mm : default;
+                        JsonElement delta = choices[0].TryGetProperty("delta", out JsonElement d) ? d
+                            : choices[0].TryGetProperty("message", out JsonElement mm) ? mm : default;
                         
                         if (delta.ValueKind != JsonValueKind.Undefined)
                         {
-                            if (delta.TryGetProperty("reasoning_content", out var rc) && rc.ValueKind == JsonValueKind.String)
+                            if (delta.TryGetProperty("reasoning_content", out JsonElement rc) && rc.ValueKind == JsonValueKind.String)
                             {
-                                var rct = rc.GetString();
+                                string? rct = rc.GetString();
                                 if (!string.IsNullOrEmpty(rct)) sb.Append(rct);
                             }
-                            if (delta.TryGetProperty("tool_calls", out var tcs) && tcs.ValueKind == JsonValueKind.Array)
+
+                            if (delta.TryGetProperty("tool_calls", out JsonElement tcs) && tcs.ValueKind == JsonValueKind.Array)
                             {
                                 hasTc = true;
-                                foreach (var tc in tcs.EnumerateArray())
+                                foreach (JsonElement tc in tcs.EnumerateArray())
                                 {
-                                    if (tc.TryGetProperty("id", out var idE) && idE.ValueKind == JsonValueKind.String)
+                                    if (tc.TryGetProperty("id", out JsonElement idE) && idE.ValueKind == JsonValueKind.String)
                                     {
-                                        tcIds ??= new List<string>();
-                                        var id = idE.GetString()!;
+                                        tcIds ??= [];
+                                        string id = idE.GetString()!;
                                         if (!tcIds.Contains(id)) tcIds.Add(id);
                                     }
                                 }
                             }
-                            if (choices[0].TryGetProperty("finish_reason", out var fr) && fr.ValueKind != JsonValueKind.Null)
+
+                            if (choices[0].TryGetProperty("finish_reason", out JsonElement fr) && fr.ValueKind != JsonValueKind.Null)
                             {
-                                var reasoning = sb.ToString();
+                                string reasoning = sb.ToString();
                                 if (!string.IsNullOrEmpty(reasoning))
                                 {
                                     string key;

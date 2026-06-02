@@ -1,0 +1,14 @@
+services:
+  deepseek-proxy:
+    build: .
+    image: deepseek-copilot-proxy:latest
+    container_name: deepseek-proxy
+    ports:
+      - "${PROXY_PORT:-5000}:5000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 256M
