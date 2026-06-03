@@ -350,15 +350,15 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
 });
 
 // ─── Start ───────────────────────────────────────────────────────────
-Console.WriteLine($"╔════════════════════════════════════════╗");
-Console.WriteLine($"║   DeepSeek Copilot Proxy (Ultra)       ║");
-Console.WriteLine($"╠════════════════════════════════════════╣");
-Console.WriteLine($"║  Version: 2026.06.02                   ║");
-Console.WriteLine($"║  Default: {MODEL,-32}  ║");
-Console.WriteLine($"║  Models:  {string.Join(", ", AVAILABLE_MODELS),-32}  ║");
-Console.WriteLine($"║  URL:     http://localhost:{PORT}/v1   ║");
+Console.WriteLine($"╔════════════════════════════════════════════════════════╗");
+Console.WriteLine($"║   DeepSeek Copilot Proxy (Ultra)                       ║");
+Console.WriteLine($"╠════════════════════════════════════════════════════════╣");
+Console.WriteLine($"║  Version: 2026.06.02                                   ║");
+Console.WriteLine($"║  Default: {MODEL,-32}                                  ║");
+Console.WriteLine($"║  Models:  {string.Join(", ", AVAILABLE_MODELS),-32}    ║");
+Console.WriteLine($"║  URL:     http://localhost:{PORT}/v1                   ║");
 Console.WriteLine($"║  Auth:    {(string.IsNullOrEmpty(PROXY_API_KEY) ? "open (no key set)" : "required (PROXY_API_KEY)"),-18} ║");
-Console.WriteLine($"╚════════════════════════════════════════╝");
+Console.WriteLine($"╚════════════════════════════════════════════════════════╝");
 app.Run();
 
 // ══════════════════════════════════════════════════════════════════════
