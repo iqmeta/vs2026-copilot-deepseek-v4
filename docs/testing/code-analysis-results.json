@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-06-03T15:54:24.4061709-03:00",
+  "proxy": "http://localhost:11434",
+  "models_tested": 9,
+  "passed": 7,
+  "failed": 2,
+  "results": [
+    {
+      "model": "deepseek-ai/deepseek-v4-pro",
+      "success": true,
+      "latency_ms": 10973,
+      "response": "null",
+      "parsed": null,
+      "error": null
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "success": true,
+      "latency_ms": 27518,
+      "response": "",
+      "parsed": null,
+      "error": null
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "success": true,
+      "latency_ms": 10961,
+      "response": "",
+      "parsed": null,
+      "error": null
+    },
+    {
+      "model": "qwen/qwen3-coder-480b-a35b-instruct",
+      "success": true,
+      "latency_ms": 24885,
+      "response": "{\n  \"summary\": \"Well-structured multi-provider AI proxy with good performance optimizations, but has some security and error handling concerns.\",\n  \"bugs\": [\n    {\n      \"location\": \"Program.cs:337\",\n      \"description\": \"Potential null reference when accessing JsonElement properties without checking if they exist first\",\n      \"severity\": \"medium\"\n    },\n    {\n      \"location\": \"Program.cs:709\",\n      \"description\": \"StreamReader constructor may throw exception if request body is not properly disposed\",\n      \"severity\": \"medium\"\n    }\n  ],\n  \"security_issues\": [\n    {\n      \"location\": \"Program.cs:105\",\n      \"description\": \"API key comparison uses insecure string comparison that could be vulnerable to timing attacks\",\n      \"severity\": \"high\"\n    },\n    {\n      \"location\": \"Program.cs:95\",\n      \"description\": \"No input validation on environment variables could lead to injection attacks\",\n      \"severity\": \"medium\"\n    }\n  ],\n  \"performance_issues\": [\n    {\n      \"location\": \"Program.cs:209\",\n      \"description\": \"Using JsonDocument.Parse on entire request body loads entire payload into memory, potentially causing high memory usage for large requests\",\n      \"severity\": \"medium\"\n    },\n    {\n      \"location\": \"Program.cs:444\",\n      \"description\": \"String concatenation in StreamAndCache creates unnecessary string allocations\",\n      \"severity\": \"medium\"\n    }\n  ],\n  \"improvements\": [\n    {\n      \"location\": \"Program.cs:105\",\n      \"description\": \"Use constant-time string comparison for API key validation to prevent timing attacks\"\n    },\n    {\n      \"location\": \"Program.cs:209\",\n      \"description\": \"Consider using System.Text.Json streaming APIs instead of loading entire JSON document into memory\"\n    },\n    {\n      \"location\": \"Program.cs:709\",\n      \"description\": \"Add proper exception handling around JSON parsing to prevent crashes on malformed requests\"\n    },\n    {\n      \"location\": \"Program.cs:444\",\n      \"description\": \"Use StringBuilder pooling to reduce memory allocations during streaming\"\n    }\n  ],\n  \"score\": 8\n}",
+      "parsed": {
+        "summary": "Well-structured multi-provider AI proxy with good performance optimizations, but has some security and error handling concerns.",
+        "bugs": [
+          {
+            "location": "Program.cs:337",
+            "description": "Potential null reference when accessing JsonElement properties without checking if they exist first",
+            "severity": "medium"
+          },
+          {
+            "location": "Program.cs:709",
+            "description": "StreamReader constructor may throw exception if request body is not properly disposed",
+            "severity": "medium"
+          }
+        ],
+        "security_issues": [
+          {
+            "location": "Program.cs:105",
+            "description": "API key comparison uses insecure string comparison that could be vulnerable to timing attacks",
+            "severity": "high"
+          },
+          {
+            "location": "Program.cs:95",
+            "description": "No input validation on environment variables could lead to injection attacks",
+            "severity": "medium"
+          }
+        ],
+        "performance_issues": [
+          {
+            "location": "Program.cs:209",
+            "description": "Using JsonDocument.Parse on entire request body loads entire payload into memory, potentially causing high memory usage for large requests",
+            "severity": "medium"
+          },
+          {
+            "location": "Program.cs:444",
+            "description": "String concatenation in StreamAndCache creates unnecessary string allocations",
+            "severity": "medium"
+          }
+        ],
+        "improvements": [
+          {
+            "location": "Program.cs:105",
+            "description": "Use constant-time string comparison for API key validation to prevent timing attacks"
+          },
+          {
+            "location": "Program.cs:209",
+            "description": "Consider using System.Text.Json streaming APIs instead of loading entire JSON document into memory"
+          },
+          {
+            "location": "Program.cs:709",
+            "description": "Add proper exception handling around JSON parsing to prevent crashes on malformed requests"
+          },
+          {
+            "location": "Program.cs:444",
+            "description": "Use StringBuilder pooling to reduce memory allocations during streaming"
+          }
+        ],
+        "score": 8
+      },
+      "error": null
+    },
+    {
+      "model": "qwen/qwen3.5-397b-a17b",
+      "success": true,
+      "latency_ms": 30520,
+      "response": "{\n  \"summary\": \"The project demonstrates advanced .NET performance techniques (SlimBuilder, SocketsHttpHandler tuning, zero-allocation JSON parsing) but suffers from critical thread-safety violations in shared state management and severe security risks regarding credential handling and input validation.\",\n  \"bugs\": [\n    {\n      \"location\": \"Program.cs:24-25\",\n      \"description\": \"Critical race condition: PROVIDERS list and MODEL_TO_PROVIDER dictionary are initialized as mutable static fields and modified during startup without synchronization, yet accessed concurrently by request threads before initialization completes if startup logic were async-heavy.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"location\": \"Program.cs:285-286\",\n      \"description\": \"Critical thread-safety violation: Volatile.Write is used on reference types (Dictionary and Array), which is redundant and misleading. While reference assignment is atomic, the internal state of the Dictionary is not thread-safe for writes. If RefreshAvailableModels runs concurrently with a read that enumerates the dictionary (e.g., ResolveProvider), it can cause collection modification exceptions or data corruption.\",\n      \"severity\": \"critical\"\n    },\n    {\n      \"location\": \"Program.cs:670-672\",\n      \"description\": \"Logic error in cache eviction: The code checks Count >= MaxEntries then dequeues. In a high-concurrency scenario, multiple threads can pass the check before any dequeue occurs, causing the cache to exceed the hard limit temporarily or drop entries incorrectly due to race conditions on the ConcurrentQueue/Dictionary pair.\",\n      \"severity\": \"medium\"\n    },\n    {\n      \"location\": \"Program.cs:430-435\",\n      \"description\": \"Resource leak risk: In the Ollama chat endpoint, if JsonDocument.Parse throws, the 'reader' is disposed by the 'using' statement, but if the exception happens mid-stream, the request body might not be fully consumed, potentially causing HTTP/2 stream issues depending on the server implementation.\",\n      \"severity\": \"low\"\n    }\n  ],\n  \"security_issues\": [\n    {\n      \"location\": \"Program.cs:58-75\",\n      \"description\": \"Critical credential exposure: API keys are loaded directly from environment variables and stored in plain text within the ProviderInfo struct. If the application crashes or dumps memory, keys are exposed. Furthermore, logging the provider names (line 530) without masking associated keys is risky if the struct layout changes.\",\n      \"severity\": \"critical\"\n    },\n    {\n      \"location\": \"Program.cs:135-145\",\n      \"description\": \"Insecure authentication implementation: The custom auth middleware performs a constant-time comparison manually but relies on string slicing and Ordinal comparison. While mostly correct, it lacks protection against timing attacks if the .NET runtime optimizes string comparisons unexpectedly; using CryptographicOperations.FixedTimeEquals is the recommended standard.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"location\": \"Program.cs:115-118\",\n      \"description\": \"Missing Input Validation: The proxy accepts arbitrary JSON bodies and forwards them. There is no validation on the size of the incoming request body, allowing potential DoS via large payload attacks (e.g., sending GBs of data to be buffered in memory by StreamReader.ReadToEndAsync).\",\n      \"severity\": \"high\"\n    },\n    {\n      \"location\": \"Program.cs:350-360\",\n      \"description\": \"Path Traversal / File Disclosure Risk: LoadProviderModelSelections scans directories based on AppContext.BaseDirectory. If an attacker can upload files to this directory or manipulate the working directory, they could inject malicious model selection configs that alter routing or execution parameters.\",\n      \"severity\": \"medium\"\n    }\n  ],\n  \"performance_issues\": [\n    {\n      \"location\": \"Program.cs:116\",\n      \"description\": \"High memory allocation: Using StreamReader.ReadToEndAsync() loads the entire request body into a single string. For large context windows (e.g., 1M tokens), this creates massive LOH (Large Object Heap) pressure and increases GC latency. Streaming the JSON parsing directly from the request stream would be significantly more efficient.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"location\": \"Program.cs:255-265\",\n      \"description\": \"Inefficient model refresh logic: The RefreshAvailableModels method fetches models from ALL providers sequentially every 5 minutes, even if only one provider is used. This adds unnecessary startup latency and periodic network overhead.\",\n      \"severity\": \"medium\"\n    },\n    {\n      \"location\": \"Program.cs:600-6",
+      "parsed": null,
+      "error": null
+    },
+    {
+      "model": "mistralai/mistral-large-3-675b-instruct-2512",
+      "success": false,
+      "latency_ms": 60015,
+      "response": null,
+      "parsed": null,
+      "error": "Response status code does not indicate success: 500 (Internal Server Error)."
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "success": true,
+      "latency_ms": 37323,
+      "response": "null",
+      "parsed": null,
+      "error": null
+    },
+    {
+      "model": "moonshotai/kimi-k2.6",
+      "success": true,
+      "latency_ms": 16693,
+      "response": "null",
+      "parsed": null,
+      "error": null
+    },
+    {
+      "model": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "success": false,
+      "latency_ms": 45010,
+      "response": null,
+      "parsed": null,
+      "error": "Response status code does not indicate success: 500 (Internal Server Error)."
+    }
+  ]
+}

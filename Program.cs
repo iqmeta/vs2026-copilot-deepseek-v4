@@ -32,7 +32,10 @@ string ResolveModel(string? requestedModel) =>
         ? requestedModel : MODEL;
 
 // ─── State ───────────────────────────────────────────────────────────
+SemaphoreSlim _refreshLock = new(1, 1);
+const int ReasoningCacheMaxEntries = 512;
 ConcurrentDictionary<string, string> ReasoningCache = new(StringComparer.Ordinal);
+ConcurrentQueue<string> ReasoningCacheEvictionQueue = new();
 long _assistantMsgCounter = 0;
 
 // ─── JSON Helpers ────────────────────────────────────────────────────
@@ -93,18 +96,20 @@ foreach (string providerName in new[] { "deepseek", "openai", "nvidia" })
     PROVIDERS.Add(new ProviderInfo(providerName, apiKey, baseUrl, provClient));
 }
 
-// Fallback: legacy DEEPSEEK_API_KEY (backward compatible)
-if (PROVIDERS.Count == 0)
+// Fallback: legacy DEEPSEEK_API_KEY — always checked, allows mixing formats in .env
 {
     string? legacyKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY");
-    if (string.IsNullOrWhiteSpace(legacyKey))
-        throw new InvalidOperationException(
-            "No AI provider configured. Set PROVIDER_<NAME>_API_KEY (e.g. PROVIDER_DEEPSEEK_API_KEY) or DEEPSEEK_API_KEY.");
-
-    string legacyUrl = Environment.GetEnvironmentVariable("DEEPSEEK_BASE_URL") ?? "https://api.deepseek.com";
-    PROVIDERS.Add(new ProviderInfo("deepseek", legacyKey, legacyUrl,
-        CreateProviderClient(legacyUrl, legacyKey)));
+    if (!string.IsNullOrWhiteSpace(legacyKey) && !PROVIDERS.Any(p => p.Name == "deepseek"))
+    {
+        string legacyUrl = Environment.GetEnvironmentVariable("DEEPSEEK_BASE_URL") ?? "https://api.deepseek.com";
+        PROVIDERS.Add(new ProviderInfo("deepseek", legacyKey, legacyUrl,
+            CreateProviderClient(legacyUrl, legacyKey)));
+    }
 }
+
+if (PROVIDERS.Count == 0)
+    throw new InvalidOperationException(
+        "No AI provider configured. Set PROVIDER_<NAME>_API_KEY (e.g. PROVIDER_DEEPSEEK_API_KEY) or DEEPSEEK_API_KEY.");
 
 await RefreshAvailableModels(CancellationToken.None);
 
@@ -116,8 +121,12 @@ if (!string.IsNullOrEmpty(PROXY_API_KEY))
     app.Use(async (ctx, next) =>
     {
         string? auth = ctx.Request.Headers.Authorization;
-        if (auth != null && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-            && auth["Bearer ".Length..] == PROXY_API_KEY)
+        int bearerLen = "Bearer ".Length;
+        bool valid = auth != null
+            && auth.Length > bearerLen
+            && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(auth[bearerLen..], PROXY_API_KEY, StringComparison.Ordinal);
+        if (valid)
         {
             await next();
         }
@@ -173,8 +182,13 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
     string effectiveModel = ResolveModel(reqModel);
     ProviderInfo provider = ResolveProvider(effectiveModel);
 
+    // Derive a per-conversation cache scope to prevent cross-user reasoning-cache pollution.
+    // We use an explicit "conversation_id" if the client sends one (some Copilot builds do),
+    // otherwise we fall back to a hash of the first user message as a stable proxy for the session.
+    string convScope = ExtractConversationScope(root);
+
     // Inject cached reasoning_content + model execution defaults from provider config
-    string? modified = ModifyRequest(doc);
+    string? modified = ModifyRequest(doc, convScope);
     string bodyText = modified ?? rawBody;
     bodyText = ApplyExecutionDefaults(bodyText, effectiveModel);
 
@@ -192,7 +206,7 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
         string respBody = await response.Content.ReadAsStringAsync(ct);
 
         if (response.IsSuccessStatusCode)
-            CacheReasoningFromResponse(respBody);
+            CacheReasoningFromResponse(respBody, convScope);
 
         ctx.Response.StatusCode = (int)response.StatusCode;
         ctx.Response.ContentType = "application/json";
@@ -201,11 +215,7 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
     }
 
     // ── Streaming ──
-    ctx.Response.StatusCode = 200;
-    ctx.Response.ContentType = "text/event-stream";
-    ctx.Response.Headers.CacheControl = "no-cache";
-    ctx.Response.Headers["X-Accel-Buffering"] = "no";
-
+    // Send upstream request BEFORE committing the response status so errors can still return a proper status code
     using StringContent reqContent = new(bodyText, Encoding.UTF8, "application/json");
     using HttpRequestMessage upstreamReq = new(HttpMethod.Post, "/v1/chat/completions")
     {
@@ -213,19 +223,53 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
     };
     upstreamReq.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-    using HttpResponseMessage upstreamResp = await provider.Client.SendAsync(
-        upstreamReq, HttpCompletionOption.ResponseHeadersRead, requestCt);
-
-    if (!upstreamResp.IsSuccessStatusCode)
+    HttpResponseMessage upstreamResp;
+    try
     {
-        string errBody = await upstreamResp.Content.ReadAsStringAsync(ct);
-        ctx.Response.StatusCode = (int)upstreamResp.StatusCode;
+        upstreamResp = await provider.Client.SendAsync(
+            upstreamReq, HttpCompletionOption.ResponseHeadersRead, requestCt);
+    }
+    catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+    {
+        // Upstream timed out (model-level timeout) — return a clean 504 before headers are sent
+        ctx.Response.StatusCode = 504;
         ctx.Response.ContentType = "application/json";
-        await ctx.Response.WriteAsync(errBody, ct);
+        await ctx.Response.WriteAsync(
+            """{"error":{"message":"Upstream model timed out","type":"timeout","code":"gateway_timeout"}}""", ct);
         return;
     }
 
-    await StreamAndCache(upstreamResp, ctx.Response, ct);
+    using (upstreamResp)
+    {
+        if (!upstreamResp.IsSuccessStatusCode)
+        {
+            string errBody = await upstreamResp.Content.ReadAsStringAsync(ct);
+            ctx.Response.StatusCode = (int)upstreamResp.StatusCode;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsync(errBody, ct);
+            return;
+        }
+
+        ctx.Response.StatusCode = 200;
+        ctx.Response.ContentType = "text/event-stream";
+        ctx.Response.Headers.CacheControl = "no-cache";
+        ctx.Response.Headers["X-Accel-Buffering"] = "no";
+
+        try
+        {
+            await StreamAndCache(upstreamResp, ctx.Response, ct, convScope);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // Timeout mid-stream: send a final SSE error chunk so the client parser closes cleanly
+            try
+            {
+                await ctx.Response.WriteAsync(
+                    "data: {\"error\":{\"message\":\"Upstream model timed out mid-stream\",\"type\":\"timeout\",\"code\":\"gateway_timeout\"}}\n\ndata: [DONE]\n\n", ct);
+            }
+            catch { /* client may have already disconnected */ }
+        }
+    }
 });
 
 // ─── Ollama /api/version ─────────────────────────────────────────────
@@ -341,6 +385,7 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
     string ollamaEffectiveModel = ResolveModel(ollamaRequestedModel);
     ProviderInfo ollamaProvider = ResolveProvider(ollamaEffectiveModel);
     ModelExecutionConfig ollamaExec = GetExecutionConfigForModel(ollamaEffectiveModel);
+    string ollamaConvScope = ExtractConversationScope(root);
 
     Dictionary<string, object?> reqObj = new()
     {
@@ -377,7 +422,7 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
             return;
         }
         
-        CacheReasoningFromResponse(respBody);
+        CacheReasoningFromResponse(respBody, ollamaConvScope);
         
         using JsonDocument odoc = JsonDocument.Parse(respBody);
         JsonElement msg = odoc.RootElement.GetProperty("choices")[0].GetProperty("message");
@@ -401,23 +446,50 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
     }
     else
     {
-        ctx.Response.StatusCode = 200;
-        ctx.Response.ContentType = "text/event-stream";
-        ctx.Response.Headers["X-Accel-Buffering"] = "no";
-        
         using HttpRequestMessage upstreamReq = new(HttpMethod.Post, "/v1/chat/completions")
         {
             Content = reqContent
         };
         upstreamReq.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-        using HttpResponseMessage upstreamResp = await ollamaProvider.Client.SendAsync(
-            upstreamReq, HttpCompletionOption.ResponseHeadersRead, ollamaCt);
-        
-        if (!upstreamResp.IsSuccessStatusCode)
+        HttpResponseMessage upstreamResp;
+        try
+        {
+            upstreamResp = await ollamaProvider.Client.SendAsync(
+                upstreamReq, HttpCompletionOption.ResponseHeadersRead, ollamaCt);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            ctx.Response.StatusCode = 504;
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsync(
+                """{"error":{"message":"Upstream model timed out","type":"timeout","code":"gateway_timeout"}}""", ct);
             return;
-        
-        await StreamAndCache(upstreamResp, ctx.Response, ct);
+        }
+
+        using (upstreamResp)
+        {
+            if (!upstreamResp.IsSuccessStatusCode)
+                return;
+
+            ctx.Response.StatusCode = 200;
+            ctx.Response.ContentType = "text/event-stream";
+            ctx.Response.Headers["X-Accel-Buffering"] = "no";
+
+            try
+            {
+                await StreamAndCache(upstreamResp, ctx.Response, ct, ollamaConvScope);
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    await ctx.Response.WriteAsync(
+                        "data: {\"error\":{\"message\":\"Upstream model timed out mid-stream\",\"type\":\"timeout\",\"code\":\"gateway_timeout\"}}\n\ndata: [DONE]\n\n", ct);
+                }
+                catch { /* client may have already disconnected */ }
+            }
+        }
     }
 });
 
@@ -443,7 +515,20 @@ async Task RefreshAvailableModelsIfNeeded(CancellationToken ct)
     if (DateTime.UtcNow - MODELS_LAST_REFRESH_UTC < MODELS_REFRESH_INTERVAL)
         return;
 
-    await RefreshAvailableModels(ct);
+    // Non-blocking try: if another request is already refreshing, skip this refresh.
+    if (!await _refreshLock.WaitAsync(0, ct))
+        return;
+    try
+    {
+        // Double-check inside the lock in case another refresh completed while we waited.
+        if (DateTime.UtcNow - MODELS_LAST_REFRESH_UTC < MODELS_REFRESH_INTERVAL)
+            return;
+        await RefreshAvailableModels(ct);
+    }
+    finally
+    {
+        _refreshLock.Release();
+    }
 }
 
 async Task RefreshAvailableModels(CancellationToken ct)
@@ -477,11 +562,14 @@ async Task RefreshAvailableModels(CancellationToken ct)
 
         if (allModels.Count > 0)
         {
-            AVAILABLE_MODELS = allModels
+            // Build the new array first, then publish both references atomically via Volatile.Write.
+            // Readers using Volatile.Read see either the old or new complete pair — never a torn state.
+            string[] newModels = allModels
                 .OrderBy(model => GetPreferredModelPriority(model, newMap[model].Name))
                 .ThenBy(x => x, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            MODEL_TO_PROVIDER = newMap;
+            Volatile.Write(ref MODEL_TO_PROVIDER, newMap);
+            Volatile.Write(ref AVAILABLE_MODELS, newModels);
             MODELS_LAST_REFRESH_UTC = DateTime.UtcNow;
         }
     }
@@ -972,7 +1060,39 @@ string ApplyExecutionDefaults(string rawBody, string model)
     }
 }
 
-string? ModifyRequest(JsonDocument doc)
+// Returns a stable, per-conversation cache scope string.
+// Priority: explicit "conversation_id" field > hash of first user message content > empty string (single-user or unknown).
+string ExtractConversationScope(JsonElement root)
+{
+    // 1. Explicit conversation_id (sent by some Copilot / OpenAI clients)
+    if (root.TryGetProperty("conversation_id", out JsonElement cid) && cid.ValueKind == JsonValueKind.String)
+    {
+        string? id = cid.GetString();
+        if (!string.IsNullOrWhiteSpace(id))
+            return id!;
+    }
+
+    // 2. Stable hash of the first user message — acts as a session fingerprint without storing PII keys.
+    if (root.TryGetProperty("messages", out JsonElement msgs))
+    {
+        foreach (JsonElement msg in msgs.EnumerateArray())
+        {
+            if (msg.TryGetProperty("role", out JsonElement rEl) && rEl.GetString() == "user"
+                && msg.TryGetProperty("content", out JsonElement cEl))
+            {
+                string content = cEl.ValueKind == JsonValueKind.String
+                    ? cEl.GetString() ?? ""
+                    : cEl.GetRawText();
+                if (!string.IsNullOrEmpty(content))
+                    return $"conv_{Math.Abs(content.GetHashCode())}";
+            }
+        }
+    }
+
+    return "shared";
+}
+
+string? ModifyRequest(JsonDocument doc, string convScope)
 {
     JsonElement root = doc.RootElement;
     if (!root.TryGetProperty("messages", out JsonElement msgs))
@@ -992,7 +1112,7 @@ string? ModifyRequest(JsonDocument doc)
             prop.WriteTo(w);
             continue;
         }
-        
+
         w.WritePropertyName("messages");
         w.WriteStartArray();
         foreach (JsonElement msg in msgs.EnumerateArray())
@@ -1002,26 +1122,26 @@ string? ModifyRequest(JsonDocument doc)
             {
                 bool hasTc = msg.TryGetProperty("tool_calls", out JsonElement tcArr) && tcArr.GetArrayLength() > 0;
                 string? key = null;
-                
+
                 if (hasTc)
                 {
                     List<string> ids = [];
                     foreach (JsonElement tc in tcArr.EnumerateArray())
                         if (tc.TryGetProperty("id", out JsonElement idE) && idE.ValueKind == JsonValueKind.String)
                             ids.Add(idE.GetString()!);
-                    if (ids.Count > 0) key = $"toolcall:{string.Join("|", ids)}";
+                    if (ids.Count > 0) key = $"{convScope}:toolcall:{string.Join("|", ids)}";
                 }
                 else
                 {
-                    key = $"assistant:{idx++}";
+                    key = $"{convScope}:assistant:{idx++}";
                 }
-                
+
                 if (key != null && ReasoningCache.TryGetValue(key, out string? rc))
                 {
                     bool needsInject = !msg.TryGetProperty("reasoning_content", out JsonElement exRc)
                         || exRc.ValueKind != JsonValueKind.String
                         || string.IsNullOrEmpty(exRc.GetString());
-                    
+
                     if (needsInject)
                     {
                         w.WriteStartObject();
@@ -1043,11 +1163,11 @@ string? ModifyRequest(JsonDocument doc)
 
     w.WriteEndObject();
     w.Flush();
-    
+
     return modified ? Encoding.UTF8.GetString(ms.ToArray()) : null;
 }
 
-void CacheReasoningFromResponse(string json)
+void CacheReasoningFromResponse(string json, string convScope)
 {
     try
     {
@@ -1058,7 +1178,7 @@ void CacheReasoningFromResponse(string json)
         JsonElement msg = choices[0].TryGetProperty("message", out JsonElement m) ? m : choices[0].TryGetProperty("delta", out JsonElement d) ? d : default;
         if (msg.ValueKind == JsonValueKind.Undefined) return;
         if (!msg.TryGetProperty("reasoning_content", out JsonElement rc) || string.IsNullOrEmpty(rc.GetString())) return;
-        
+
         string key;
         if (msg.TryGetProperty("tool_calls", out JsonElement tcs) && tcs.GetArrayLength() > 0)
         {
@@ -1066,19 +1186,24 @@ void CacheReasoningFromResponse(string json)
             foreach (JsonElement tc in tcs.EnumerateArray())
                 if (tc.TryGetProperty("id", out JsonElement idE) && idE.ValueKind == JsonValueKind.String)
                     ids.Add(idE.GetString()!);
-            key = $"toolcall:{string.Join("|", ids)}";
+            key = $"{convScope}:toolcall:{string.Join("|", ids)}";
         }
         else
         {
-            key = $"assistant:{Interlocked.Increment(ref _assistantMsgCounter) - 1}";
+            key = $"{convScope}:assistant:{Interlocked.Increment(ref _assistantMsgCounter) - 1}";
         }
-        
+
+        // Bounded eviction: remove oldest entries when cache is full.
+        if (ReasoningCache.Count >= ReasoningCacheMaxEntries && ReasoningCacheEvictionQueue.TryDequeue(out string? oldest))
+            ReasoningCache.TryRemove(oldest, out _);
+
         ReasoningCache[key] = rc.GetString()!;
+        ReasoningCacheEvictionQueue.Enqueue(key);
     }
     catch { /* cache errors are non-critical */ }
 }
 
-async Task StreamAndCache(HttpResponseMessage upstream, HttpResponse downstream, CancellationToken ct)
+async Task StreamAndCache(HttpResponseMessage upstream, HttpResponse downstream, CancellationToken ct, string convScope = "")
 {
     using Stream upstreamStream = await upstream.Content.ReadAsStreamAsync(ct);
     using StreamReader reader = new(upstreamStream);
@@ -1137,10 +1262,16 @@ async Task StreamAndCache(HttpResponseMessage upstream, HttpResponse downstream,
                                 {
                                     string key;
                                     if (hasTc && tcIds != null && tcIds.Count > 0)
-                                        key = $"toolcall:{string.Join("|", tcIds)}";
+                                        key = $"{convScope}:toolcall:{string.Join("|", tcIds)}";
                                     else
-                                        key = $"assistant:{asstIdx ?? (int)(Interlocked.Increment(ref _assistantMsgCounter) - 1)}";
+                                        key = $"{convScope}:assistant:{asstIdx ?? (int)(Interlocked.Increment(ref _assistantMsgCounter) - 1)}";
+
+                                    // Bounded eviction before inserting
+                                    if (ReasoningCache.Count >= ReasoningCacheMaxEntries && ReasoningCacheEvictionQueue.TryDequeue(out string? oldest))
+                                        ReasoningCache.TryRemove(oldest, out _);
+
                                     ReasoningCache[key] = reasoning;
+                                    ReasoningCacheEvictionQueue.Enqueue(key);
                                 }
                             }
                         }

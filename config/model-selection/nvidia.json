@@ -32,7 +32,7 @@
         "top_p": 0.9,
         "max_tokens": 1024,
         "reasoning_effort": "high",
-        "timeout_seconds": 45
+        "timeout_seconds": 120
       }
     },
     {
@@ -49,13 +49,13 @@
         "top_p": 0.9,
         "max_tokens": 1024,
         "reasoning_effort": "high",
-        "timeout_seconds": 60
+        "timeout_seconds": 90
       }
     },
     {
       "match": "mistralai/mistral-large-3-675b-instruct-2512",
       "priority": 4,
-      "enabled": true,
+      "enabled": false,
       "execution": {
         "context_length": 128000,
         "max_output_tokens": 16384,
@@ -64,15 +64,15 @@
         "family": "mistralai",
         "temperature": 0.25,
         "top_p": 0.9,
-        "max_tokens": 256,
+        "max_tokens": 1024,
         "reasoning_effort": "medium",
-        "timeout_seconds": 120
+        "timeout_seconds": 60
       }
     },
     {
       "match": "meta/llama-4-maverick-17b-128e-instruct",
       "priority": 5,
-      "enabled": true,
+      "enabled": false,
       "execution": {
         "context_length": 128000,
         "max_output_tokens": 16384,
@@ -89,7 +89,7 @@
     {
       "match": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
       "priority": 6,
-      "enabled": true,
+      "enabled": false,
       "execution": {
         "context_length": 128000,
         "max_output_tokens": 16384,
@@ -106,7 +106,7 @@
     {
       "match": "nvidia/nemotron-4-340b-instruct",
       "priority": 7,
-      "enabled": true,
+      "enabled": false,
       "execution": {
         "context_length": 128000,
         "max_output_tokens": 16384,
@@ -157,7 +157,7 @@
     {
       "match": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
       "priority": 10,
-      "enabled": true,
+      "enabled": false,
       "execution": {
         "context_length": 128000,
         "max_output_tokens": 16384,
