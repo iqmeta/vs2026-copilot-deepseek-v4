@@ -178,7 +178,7 @@ app.MapGet("/api/tags", async (HttpContext ctx) =>
     {
         models = AVAILABLE_MODELS.Select(m =>
             {
-                var p = GetModelProfile(m);
+                (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities) p = GetModelProfile(m);
                 return new
                 {
                     name = m,
@@ -487,7 +487,7 @@ string[] ParseConfiguredModels(string? rawModels, string fallbackModel)
 
 Dictionary<string, object?> BuildOllamaShowResponse(string model)
 {
-    var p = GetModelProfile(model);
+    (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities) p = GetModelProfile(model);
 
     return new Dictionary<string, object?>
     {
