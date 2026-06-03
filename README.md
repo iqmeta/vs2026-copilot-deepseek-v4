@@ -99,14 +99,14 @@ dotnet run
 You should see:
 
 ```
-╔════════════════════════════════════════╗
-║   DeepSeek Copilot Proxy (Ultra)       ║
-╠════════════════════════════════════════╣
-║  Default: deepseek-v4-pro              ║
+╔══════════════════════════════════════════════╗
+║   DeepSeek Copilot Proxy (Ultra)             ║
+╠══════════════════════════════════════════════╣
+║  Default: deepseek-v4-pro                    ║
 ║  Models:  deepseek-v4-flash, deepseek-v4-pro ║
-║  URL:     http://localhost:11434/v1    ║
-║  Auth:    open (no key set)            ║
-╚════════════════════════════════════════╝
+║  URL:     http://localhost:11434/v1          ║
+║  Auth:    open (no key set)                  ║
+╚══════════════════════════════════════════════╝
 ```
 
 ---
