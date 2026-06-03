@@ -233,8 +233,7 @@ app.MapGet("/api/tags", async (HttpContext ctx) =>
     {
         models = AVAILABLE_MODELS.Select(m =>
             {
-                (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities) p = GetModelProfile(m);
-                string providerName = MODEL_TO_PROVIDER.TryGetValue(m, out var prov) ? prov.Name : "unknown";
+                var p = GetModelProfile(m);
                 return new
                 {
                     name = m,
@@ -246,8 +245,8 @@ app.MapGet("/api/tags", async (HttpContext ctx) =>
                     {
                         parent_model = "",
                         format = "api",
-                        family = providerName,
-                        families = new[] { providerName },
+                        family = p.Family,
+                        families = new[] { p.Family },
                         parameter_size = "api",
                         quantization_level = "none"
                     },
@@ -443,11 +442,14 @@ async Task RefreshAvailableModels(CancellationToken ct)
             string[] discovered = await TryGetModelsFromProvider(prov.Client, ct);
             foreach (string m in discovered)
             {
-                if (!string.IsNullOrWhiteSpace(m) && !newMap.ContainsKey(m))
-                {
-                    newMap[m] = prov;
-                    allModels.Add(m);
-                }
+                if (string.IsNullOrWhiteSpace(m) || newMap.ContainsKey(m))
+                    continue;
+                // Skip non-chat models (safety/guard/embed/reranker/vision-only etc.)
+                var profile = GetModelProfile(m);
+                if (profile.ContextLength == 0)
+                    continue;
+                newMap[m] = prov;
+                allModels.Add(m);
             }
         }
 
@@ -521,25 +523,115 @@ string[] ExtractModels(JsonElement root)
         .ToArray();
 }
 
-(int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities) GetModelProfile(string model)
+(int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) GetModelProfile(string model)
 {
-    bool supportsVision = model.Contains("vision", StringComparison.OrdinalIgnoreCase)
-        || model.Contains("vl", StringComparison.OrdinalIgnoreCase);
+    string m = model.ToLowerInvariant();
+    bool tools = true;
+    bool vision = m.Contains("vision") || m.Contains("-vl") || m.Contains("neva") || m.Contains("vila") || m.Contains("fuyu") || m.Contains("kosmos");
+    int ctx, maxOut;
 
-    // Official DeepSeek V4 limits (Models & Pricing): 1M context, up to 384K output
-    int contextLength = 1_000_000;
-    int maxOutputTokens = 384_000;
+    // DeepSeek models: 1M context, 384K output
+    if (m.Contains("deepseek"))
+    { ctx = 1_000_000; maxOut = 384_000; }
+    // NVIDIA Nemotron Super (1M context)
+    else if (m.Contains("nemotron-3-super"))
+    { ctx = 1_000_000; maxOut = 16384; }
+    // NVIDIA Nemotron Ultra 253B
+    else if (m.Contains("nemotron") && m.Contains("ultra"))
+    { ctx = 128_000; maxOut = 16384; }
+    // NVIDIA Nemotron 70B / 51B / 340B
+    else if (m.Contains("nemotron") || m.Contains("nvidia-nemotron"))
+    { ctx = 128_000; maxOut = 16384; }
+    // Llama 4 / 3.3 / 3.2 / 3.1
+    else if (m.Contains("llama-4") || m.Contains("llama-3.3") || m.Contains("llama-3.2") || m.Contains("llama-3.1"))
+    { ctx = 128_000; maxOut = 16384; }
+    // Llama 2 / CodeLlama
+    else if (m.Contains("llama-2") || m.Contains("codellama"))
+    { ctx = 4096; maxOut = 4096; }
+    // Mistral Large 3 / Large 2
+    else if (m.Contains("mistral-large-3") || m.Contains("mistral-large-2") || m.Contains("mistral-large"))
+    { ctx = 128_000; maxOut = 16384; }
+    // Mistral Medium / Small / Mixtral 8x22B
+    else if (m.Contains("mistral") && (m.Contains("medium") || m.Contains("small")))
+    { ctx = 128_000; maxOut = 16384; }
+    else if (m.Contains("mixtral-8x22b"))
+    { ctx = 65536; maxOut = 4096; }
+    else if (m.Contains("mixtral") || m.Contains("mistral") || m.Contains("codestral") || m.Contains("ministral") || m.Contains("mistral-nemo"))
+    { ctx = 32768; maxOut = 4096; }
+    // Qwen3 Coder 480B
+    else if (m.Contains("qwen3-coder"))
+    { ctx = 128_000; maxOut = 16384; }
+    else if (m.Contains("qwen"))
+    { ctx = 128_000; maxOut = 8192; }
+    // CodeGemma / Gemma 4 / Gemma 3 / Gemma 2
+    else if (m.Contains("gemma-4"))
+    { ctx = 128_000; maxOut = 16384; }
+    else if (m.Contains("gemma-3"))
+    { ctx = 32768; maxOut = 8192; }
+    else if (m.Contains("gemma-2") || m.Contains("gemma-2b") || m.Contains("codegemma"))
+    { ctx = 8192; maxOut = 4096; }
+    // Phi-4 / Phi-3.5
+    else if (m.Contains("phi-4"))
+    { ctx = 128_000; maxOut = 16384; }
+    else if (m.Contains("phi-3"))
+    { ctx = 128_000; maxOut = 4096; }
+    // Granite Code 34B / 8B
+    else if (m.Contains("granite-34b-code"))
+    { ctx = 128_000; maxOut = 4096; }
+    else if (m.Contains("granite"))
+    { ctx = 128_000; maxOut = 4096; }
+    // StarCoder2
+    else if (m.Contains("starcoder2"))
+    { ctx = 16384; maxOut = 4096; }
+    // GPT-OSS
+    else if (m.Contains("gpt-oss"))
+    { ctx = 128_000; maxOut = 16384; }
+    // DBRX / Jamba
+    else if (m.Contains("dbrx") || m.Contains("jamba"))
+    { ctx = 32768; maxOut = 4096; }
+    // Yi-large / Seed-OSS / Kimi / Step / GLM
+    else if (m.Contains("yi-large") || m.Contains("seed-oss"))
+    { ctx = 32768; maxOut = 4096; }
+    else if (m.Contains("kimi"))
+    { ctx = 128_000; maxOut = 8192; }
+    else if (m.Contains("step-3"))
+    { ctx = 128_000; maxOut = 16384; }
+    else if (m.Contains("glm-5"))
+    { ctx = 128_000; maxOut = 8192; }
+    // Solar / Zamba
+    else if (m.Contains("solar") || m.Contains("zamba"))
+    { ctx = 4096; maxOut = 4096; }
+    // Palmyra
+    else if (m.Contains("palmyra"))
+    { ctx = 32768; maxOut = 4096; }
+    // Safety / Embed / Guard / Reranker / Reward / Clip / Parse / Detector / cached-model / Translate — exclude from chat
+    else if (m.Contains("guard") || m.Contains("safety") || m.Contains("embed") || m.Contains("retriever") || m.Contains("reranker") || m.Contains("reward") || m.Contains("parse") || m.Contains("detector") || m.Contains("clip") || m.Contains("nv-embed") || m.Contains("embedqa") || m.Contains("cached-model") || m.Contains("rerank") || m.Contains("classification") || m.Contains("riva-translate") || m.Contains("synthetic-video"))
+    { ctx = 0; maxOut = 0; tools = false; }
+    // Default fallback
+    else
+    { ctx = 128_000; maxOut = 8192; }
 
-    string[] capabilities = supportsVision
-        ? ["completion", "tools", "vision"]
-        : ["completion", "tools"];
+    string[] capabilities = vision ? ["completion", "tools", "vision"] : ["completion", "tools"];
 
-    return (contextLength, maxOutputTokens, true, supportsVision, capabilities);
+    string family = m.Contains("deepseek") ? "deepseek"
+        : m.Contains("nemotron") || m.Contains("llama-3.1-nemotron") || m.Contains("llama-3.3-nemotron") || m.Contains("nvidia-nemotron") || m.Contains("cosmos-reason") ? "nvidia"
+        : m.Contains("llama") || m.Contains("codellama") ? "meta"
+        : m.Contains("mistral") || m.Contains("mixtral") || m.Contains("codestral") || m.Contains("ministral") ? "mistralai"
+        : m.Contains("qwen") ? "qwen"
+        : m.Contains("gemma") || m.Contains("codegemma") ? "google"
+        : m.Contains("phi-") ? "microsoft"
+        : m.Contains("granite") ? "ibm"
+        : m.Contains("gpt-oss") ? "openai"
+        : m.Contains("nemotron") ? "nvidia"
+        : MODEL_TO_PROVIDER.TryGetValue(model, out var prov) ? prov.Name
+        : "api";
+
+    return (ctx, maxOut, tools, vision, capabilities, family);
 }
 
 Dictionary<string, object?> BuildOllamaShowResponse(string model)
 {
-    (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities) p = GetModelProfile(model);
+    var p = GetModelProfile(model);
 
     return new Dictionary<string, object?>
     {
@@ -547,7 +639,7 @@ Dictionary<string, object?> BuildOllamaShowResponse(string model)
         ["modified_at"] = DateTime.UtcNow.ToString("o"),
         ["size"] = 0L,
         ["digest"] = "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-        ["license"] = "DeepSeek API",
+        ["license"] = "NIM API",
         ["modelfile"] = $"FROM {model}",
         ["parameters"] = $"num_ctx {p.ContextLength}\nnum_predict {p.MaxOutputTokens}",
         ["template"] = "{{ .Prompt }}",
@@ -555,17 +647,16 @@ Dictionary<string, object?> BuildOllamaShowResponse(string model)
         {
             ["parent_model"] = "",
             ["format"] = "api",
-            ["family"] = "deepseek",
-            ["families"] = new[] { "deepseek" },
+            ["family"] = p.Family,
+            ["families"] = new[] { p.Family },
             ["parameter_size"] = "api",
             ["quantization_level"] = "none"
         },
         ["model_info"] = new Dictionary<string, object?>
         {
-            ["general.architecture"] = "deepseek",
+            ["general.architecture"] = p.Family,
             ["general.basename"] = model,
             ["general.context_length"] = p.ContextLength,
-            ["deepseek.context_length"] = p.ContextLength,
             ["context_length"] = p.ContextLength,
             ["max_output_tokens"] = p.MaxOutputTokens,
             ["input_token_limit"] = p.ContextLength,
