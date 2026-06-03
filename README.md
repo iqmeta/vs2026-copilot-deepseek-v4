@@ -86,6 +86,20 @@ All configuration lives in environment variables:
 
 > **Backward compatible**: If only `DEEPSEEK_API_KEY` is set (without `PROVIDER_*` vars), the proxy works as before with DeepSeek only.
 
+### Provider Model Selection (JSON files)
+
+Model selection is modular and provider-specific via JSON files:
+
+- `config/model-selection/deepseek.json`
+- `config/model-selection/openai.json`
+- `config/model-selection/nvidia.json`
+
+Format:
+- `provider`: provider key (`deepseek`, `openai`, `nvidia`)
+- `models`: ordered list of preferred model IDs/patterns
+
+The proxy filters discovered models using the provider's file and preserves the declared order as priority.
+
 ### Supported Models & Capabilities
 
 Models are auto-discovered from each configured provider. Typical defaults:
@@ -278,6 +292,15 @@ The proxy is a single-file .NET application using:
 - `Microsoft.AspNetCore` — Minimal API hosting
 - `System.Text.Json` — JSON parsing with snake_case policy
 - `System.Net.Http.SocketsHttpHandler` — High-performance HTTP transport
+
+---
+
+## Testing Artifacts
+
+Generated validation outputs are stored in `docs/testing/`:
+- `docs/testing/top10-optimal-params-send-test.json` — raw request/response validation for the current top-10 list.
+- `docs/testing/top10-parameter-matrix.json` — recommended per-model runtime parameters and availability status.
+- `docs/testing/nvidia-nim-models-config.json` — full sweep output for the broader NVIDIA NIM model set.
 
 ---
 

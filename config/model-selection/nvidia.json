@@ -1,0 +1,175 @@
+{
+  "provider": "nvidia",
+  "models": [
+    {
+      "match": "deepseek-ai/deepseek-v4-pro",
+      "priority": 1,
+      "enabled": true,
+      "execution": {
+        "context_length": 1000000,
+        "max_output_tokens": 384000,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "deepseek",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_tokens": 256,
+        "reasoning_effort": "high",
+        "timeout_seconds": 120
+      }
+    },
+    {
+      "match": "qwen/qwen3-coder-480b-a35b-instruct",
+      "priority": 2,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "qwen",
+        "temperature": 0.15,
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 45
+      }
+    },
+    {
+      "match": "qwen/qwen3.5-397b-a17b",
+      "priority": 3,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 8192,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "qwen",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 60
+      }
+    },
+    {
+      "match": "mistralai/mistral-large-3-675b-instruct-2512",
+      "priority": 4,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "mistralai",
+        "temperature": 0.25,
+        "top_p": 0.9,
+        "max_tokens": 256,
+        "reasoning_effort": "medium",
+        "timeout_seconds": 120
+      }
+    },
+    {
+      "match": "meta/llama-4-maverick-17b-128e-instruct",
+      "priority": 5,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "meta",
+        "temperature": 0.25,
+        "top_p": 0.9,
+        "max_tokens": 256,
+        "reasoning_effort": "medium",
+        "timeout_seconds": 120
+      }
+    },
+    {
+      "match": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "priority": 6,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "nvidia",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_tokens": 256,
+        "reasoning_effort": "high",
+        "timeout_seconds": 30
+      }
+    },
+    {
+      "match": "nvidia/nemotron-4-340b-instruct",
+      "priority": 7,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "nvidia",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_tokens": 256,
+        "reasoning_effort": "high",
+        "timeout_seconds": 30
+      }
+    },
+    {
+      "match": "openai/gpt-oss-120b",
+      "priority": 8,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "openai",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 45
+      }
+    },
+    {
+      "match": "moonshotai/kimi-k2.6",
+      "priority": 9,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 8192,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "nvidia",
+        "temperature": 0.25,
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "reasoning_effort": "medium",
+        "timeout_seconds": 45
+      }
+    },
+    {
+      "match": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "priority": 10,
+      "enabled": true,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "nvidia",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 45
+      }
+    }
+  ]
+}

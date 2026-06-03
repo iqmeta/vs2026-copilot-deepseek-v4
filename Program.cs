@@ -20,10 +20,11 @@ Dictionary<string, ProviderInfo> MODEL_TO_PROVIDER = new(StringComparer.OrdinalI
 string[] AVAILABLE_MODELS = [MODEL];
 DateTime MODELS_LAST_REFRESH_UTC = DateTime.MinValue;
 TimeSpan MODELS_REFRESH_INTERVAL = TimeSpan.FromMinutes(5);
+Dictionary<string, ModelSelectionEntry[]> PROVIDER_MODEL_SELECTIONS = LoadProviderModelSelections();
 
 // Resolve model → provider: look up by model name, fallback to first provider's default
 ProviderInfo ResolveProvider(string? requestedModel) =>
-    !string.IsNullOrWhiteSpace(requestedModel) && MODEL_TO_PROVIDER.TryGetValue(requestedModel, out var p)
+    !string.IsNullOrWhiteSpace(requestedModel) && MODEL_TO_PROVIDER.TryGetValue(requestedModel, out ProviderInfo p)
         ? p : PROVIDERS[0];
 
 string ResolveModel(string? requestedModel) =>
@@ -138,7 +139,7 @@ app.MapGet("/v1/models", async (HttpContext ctx) =>
         @object = "list",
         data = AVAILABLE_MODELS.Select(m =>
         {
-            string providerName = MODEL_TO_PROVIDER.TryGetValue(m, out var prov) ? prov.Name : "unknown";
+            string providerName = MODEL_TO_PROVIDER.TryGetValue(m, out ProviderInfo prov) ? prov.Name : "unknown";
             return new { id = m, @object = "model", created = 1700000000, owned_by = providerName };
         }).ToArray()
     }, JsonOpts);
@@ -169,11 +170,16 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
     // Resolve provider from requested model
     string reqModel = root.TryGetProperty("model", out JsonElement rm) && rm.ValueKind == JsonValueKind.String
         ? rm.GetString()! : MODEL;
-    ProviderInfo provider = ResolveProvider(reqModel);
+    string effectiveModel = ResolveModel(reqModel);
+    ProviderInfo provider = ResolveProvider(effectiveModel);
 
-    // Inject cached reasoning_content
+    // Inject cached reasoning_content + model execution defaults from provider config
     string? modified = ModifyRequest(doc);
     string bodyText = modified ?? rawBody;
+    bodyText = ApplyExecutionDefaults(bodyText, effectiveModel);
+
+    using CancellationTokenSource? timeoutCts = CreateModelTimeoutCts(effectiveModel, ct);
+    CancellationToken requestCt = timeoutCts?.Token ?? ct;
 
     // For non-streaming: direct proxy via provider's HttpClient
     if (!isStream)
@@ -181,7 +187,7 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
         using StringContent content = new(bodyText, Encoding.UTF8, "application/json");
         using HttpResponseMessage response = await provider.Client.SendAsync(
             new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = content },
-            ct);
+            requestCt);
 
         string respBody = await response.Content.ReadAsStringAsync(ct);
 
@@ -208,7 +214,7 @@ app.MapPost("/v1/chat/completions", async (HttpContext ctx) =>
     upstreamReq.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
     using HttpResponseMessage upstreamResp = await provider.Client.SendAsync(
-        upstreamReq, HttpCompletionOption.ResponseHeadersRead, ct);
+        upstreamReq, HttpCompletionOption.ResponseHeadersRead, requestCt);
 
     if (!upstreamResp.IsSuccessStatusCode)
     {
@@ -233,7 +239,7 @@ app.MapGet("/api/tags", async (HttpContext ctx) =>
     {
         models = AVAILABLE_MODELS.Select(m =>
             {
-                var p = GetModelProfile(m);
+                (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) p = GetModelProfile(m);
                 return new
                 {
                     name = m,
@@ -334,24 +340,34 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
         ? om.GetString()! : MODEL;
     string ollamaEffectiveModel = ResolveModel(ollamaRequestedModel);
     ProviderInfo ollamaProvider = ResolveProvider(ollamaEffectiveModel);
+    ModelExecutionConfig ollamaExec = GetExecutionConfigForModel(ollamaEffectiveModel);
 
     Dictionary<string, object?> reqObj = new()
     {
         ["model"] = ollamaEffectiveModel,
         ["messages"] = messages,
         ["stream"] = isStream,
-        ["max_tokens"] = 8192
+        ["max_tokens"] = ollamaExec.MaxTokensPreferred ?? 8192
     };
     if (root.TryGetProperty("tools", out JsonElement tools))
         reqObj["tools"] = tools;
 
+    if (ollamaExec.Temperature.HasValue)
+        reqObj["temperature"] = ollamaExec.Temperature.Value;
+    if (ollamaExec.TopP.HasValue)
+        reqObj["top_p"] = ollamaExec.TopP.Value;
+    if (!string.IsNullOrWhiteSpace(ollamaExec.ReasoningEffort))
+        reqObj["reasoning_effort"] = ollamaExec.ReasoningEffort;
+
     string reqJson = JsonSerializer.Serialize(reqObj, JsonOpts);
     using StringContent reqContent = new(reqJson, Encoding.UTF8, "application/json");
+    using CancellationTokenSource? ollamaTimeoutCts = CreateModelTimeoutCts(ollamaEffectiveModel, ct);
+    CancellationToken ollamaCt = ollamaTimeoutCts?.Token ?? ct;
 
     if (!isStream)
     {
         using HttpResponseMessage resp = await ollamaProvider.Client.SendAsync(
-            new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = reqContent }, ct);
+            new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = reqContent }, ollamaCt);
         string respBody = await resp.Content.ReadAsStringAsync(ct);
         
         if (!resp.IsSuccessStatusCode)
@@ -396,7 +412,7 @@ app.MapPost("/api/chat", async (HttpContext ctx) =>
         upstreamReq.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
         using HttpResponseMessage upstreamResp = await ollamaProvider.Client.SendAsync(
-            upstreamReq, HttpCompletionOption.ResponseHeadersRead, ct);
+            upstreamReq, HttpCompletionOption.ResponseHeadersRead, ollamaCt);
         
         if (!upstreamResp.IsSuccessStatusCode)
             return;
@@ -444,10 +460,16 @@ async Task RefreshAvailableModels(CancellationToken ct)
             {
                 if (string.IsNullOrWhiteSpace(m) || newMap.ContainsKey(m))
                     continue;
-                // Skip non-chat models (safety/guard/embed/reranker/vision-only etc.)
-                var profile = GetModelProfile(m);
+
+                // Keep only curated, powerful, code/reasoning-oriented models
+                if (!IsPreferredModel(m, prov.Name))
+                    continue;
+
+                // Skip non-chat models (safety/guard/embed/reranker/etc.)
+                (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) profile = GetModelProfile(m);
                 if (profile.ContextLength == 0)
                     continue;
+
                 newMap[m] = prov;
                 allModels.Add(m);
             }
@@ -455,7 +477,10 @@ async Task RefreshAvailableModels(CancellationToken ct)
 
         if (allModels.Count > 0)
         {
-            AVAILABLE_MODELS = allModels.ToArray();
+            AVAILABLE_MODELS = allModels
+                .OrderBy(model => GetPreferredModelPriority(model, newMap[model].Name))
+                .ThenBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
             MODEL_TO_PROVIDER = newMap;
             MODELS_LAST_REFRESH_UTC = DateTime.UtcNow;
         }
@@ -523,15 +548,182 @@ string[] ExtractModels(JsonElement root)
         .ToArray();
 }
 
-(int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) GetModelProfile(string model)
+Dictionary<string, ModelSelectionEntry[]> LoadProviderModelSelections()
+{
+    Dictionary<string, ModelSelectionEntry[]> selections = new(StringComparer.OrdinalIgnoreCase);
+    string[] candidateDirs =
+    [
+        Path.Combine(AppContext.BaseDirectory, "config", "model-selection"),
+        Path.Combine(Directory.GetCurrentDirectory(), "config", "model-selection")
+    ];
+
+    foreach (string dir in candidateDirs.Distinct(StringComparer.OrdinalIgnoreCase))
+    {
+        if (!Directory.Exists(dir))
+            continue;
+
+        foreach (string file in Directory.EnumerateFiles(dir, "*.json"))
+        {
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(file));
+                JsonElement root = doc.RootElement;
+
+                if (!root.TryGetProperty("provider", out JsonElement provE) || provE.ValueKind != JsonValueKind.String)
+                    continue;
+
+                string provider = provE.GetString()!.Trim().ToLowerInvariant();
+
+                if (!root.TryGetProperty("models", out JsonElement modelsE) || modelsE.ValueKind != JsonValueKind.Array)
+                    continue;
+
+                List<ModelSelectionEntry> entries = [];
+                int idx = 0;
+                foreach (JsonElement item in modelsE.EnumerateArray())
+                {
+                    idx++;
+                    if (item.ValueKind == JsonValueKind.String)
+                    {
+                        string? match = item.GetString();
+                        if (!string.IsNullOrWhiteSpace(match))
+                            entries.Add(new ModelSelectionEntry(match!, idx, true, new ModelExecutionConfig()));
+                        continue;
+                    }
+
+                    if (item.ValueKind != JsonValueKind.Object)
+                        continue;
+
+                    string? matchValue = null;
+                    if (item.TryGetProperty("match", out JsonElement matchE) && matchE.ValueKind == JsonValueKind.String)
+                        matchValue = matchE.GetString();
+                    else if (item.TryGetProperty("model", out JsonElement modelE) && modelE.ValueKind == JsonValueKind.String)
+                        matchValue = modelE.GetString();
+                    else if (item.TryGetProperty("id", out JsonElement idE) && idE.ValueKind == JsonValueKind.String)
+                        matchValue = idE.GetString();
+
+                    if (string.IsNullOrWhiteSpace(matchValue))
+                        continue;
+
+                    int priority = item.TryGetProperty("priority", out JsonElement priE) && priE.ValueKind == JsonValueKind.Number
+                        ? priE.GetInt32() : idx;
+                    bool enabled = !item.TryGetProperty("enabled", out JsonElement enE) || enE.ValueKind != JsonValueKind.False;
+
+                    ModelExecutionConfig exec = new();
+                    if (item.TryGetProperty("execution", out JsonElement execE) && execE.ValueKind == JsonValueKind.Object)
+                    {
+                        exec = new ModelExecutionConfig(
+                            ContextLength: execE.TryGetProperty("context_length", out JsonElement ctxE) && ctxE.ValueKind == JsonValueKind.Number ? ctxE.GetInt32() : null,
+                            MaxOutputTokens: execE.TryGetProperty("max_output_tokens", out JsonElement outE) && outE.ValueKind == JsonValueKind.Number ? outE.GetInt32() : null,
+                            SupportsTools: execE.TryGetProperty("supports_tools", out JsonElement stE) && stE.ValueKind is JsonValueKind.True or JsonValueKind.False ? stE.GetBoolean() : null,
+                            SupportsVision: execE.TryGetProperty("supports_vision", out JsonElement svE) && svE.ValueKind is JsonValueKind.True or JsonValueKind.False ? svE.GetBoolean() : null,
+                            Family: execE.TryGetProperty("family", out JsonElement famE) && famE.ValueKind == JsonValueKind.String ? famE.GetString() : null,
+                            Temperature: execE.TryGetProperty("temperature", out JsonElement tempE) && tempE.ValueKind == JsonValueKind.Number ? tempE.GetDouble() : null,
+                            TopP: execE.TryGetProperty("top_p", out JsonElement topPE) && topPE.ValueKind == JsonValueKind.Number ? topPE.GetDouble() : null,
+                            MaxTokensPreferred: execE.TryGetProperty("max_tokens", out JsonElement maxTokE) && maxTokE.ValueKind == JsonValueKind.Number ? maxTokE.GetInt32() : null,
+                            ReasoningEffort: execE.TryGetProperty("reasoning_effort", out JsonElement reE) && reE.ValueKind == JsonValueKind.String ? reE.GetString() : null,
+                            TimeoutSeconds: execE.TryGetProperty("timeout_seconds", out JsonElement timeoutE) && timeoutE.ValueKind == JsonValueKind.Number ? timeoutE.GetInt32() : null
+                        );
+                    }
+
+                    entries.Add(new ModelSelectionEntry(matchValue!, priority, enabled, exec));
+                }
+
+                if (entries.Count > 0)
+                    selections[provider] = entries.OrderBy(x => x.Priority).ToArray();
+            }
+            catch
+            {
+                // ignore malformed selection files
+            }
+        }
+    }
+
+    return selections;
+}
+
+ModelSelectionEntry[] GetDefaultPreferredModelSelections() =>
+[
+    new("deepseek-v4-pro", 1, true, new()),
+    new("qwen3-coder-480b-a35b", 2, true, new()),
+    new("qwen3.5-397b-a17b", 3, true, new()),
+    new("mistral-large-3-675b-instruct-2512", 4, true, new()),
+    new("llama-4-maverick-17b-128e-instruct", 5, true, new()),
+    new("llama-3.1-nemotron-ultra-253b-v1", 6, true, new()),
+    new("nemotron-4-340b-instruct", 7, true, new()),
+    new("gpt-oss-120b", 8, true, new()),
+    new("kimi-k2.6", 9, true, new()),
+    new("llama-3.3-nemotron-super-49b-v1.5", 10, true, new())
+];
+
+ModelSelectionEntry[] GetProviderModelSelections(string providerName)
+{
+    if (PROVIDER_MODEL_SELECTIONS.TryGetValue(providerName, out ModelSelectionEntry[]? configured) && configured.Length > 0)
+        return configured;
+
+    return GetDefaultPreferredModelSelections();
+}
+
+ModelSelectionEntry? FindModelSelectionEntry(string model, string providerName)
 {
     string m = model.ToLowerInvariant();
-    bool tools = true;
-    bool vision = m.Contains("vision") || m.Contains("-vl") || m.Contains("neva") || m.Contains("vila") || m.Contains("fuyu") || m.Contains("kosmos");
+
+    // Exclude non-chat/support models
+    if (m.Contains("guard") || m.Contains("safety") || m.Contains("embed") || m.Contains("retriever") || m.Contains("reranker")
+        || m.Contains("reward") || m.Contains("parse") || m.Contains("detector") || m.Contains("clip") || m.Contains("riva-translate"))
+        return null;
+
+    ModelSelectionEntry[] entries = GetProviderModelSelections(providerName);
+    foreach (ModelSelectionEntry entry in entries.OrderBy(x => x.Priority))
+    {
+        if (!entry.Enabled) continue;
+        if (m.Contains(entry.Match, StringComparison.OrdinalIgnoreCase))
+            return entry;
+    }
+
+    return null;
+}
+
+int GetPreferredModelPriority(string model, string providerName)
+{
+    ModelSelectionEntry? entry = FindModelSelectionEntry(model, providerName);
+    return entry?.Priority ?? int.MaxValue;
+}
+
+bool IsPreferredModel(string model, string providerName) =>
+    FindModelSelectionEntry(model, providerName) != null;
+
+ModelExecutionConfig GetExecutionConfigForModel(string model)
+{
+    if (MODEL_TO_PROVIDER.TryGetValue(model, out ProviderInfo provider))
+    {
+        ModelSelectionEntry? entry = FindModelSelectionEntry(model, provider.Name);
+        if (entry != null)
+            return entry.Value.Execution;
+    }
+
+    foreach (KeyValuePair<string, ModelSelectionEntry[]> kv in PROVIDER_MODEL_SELECTIONS)
+    {
+        ModelSelectionEntry? entry = FindModelSelectionEntry(model, kv.Key);
+        if (entry != null)
+            return entry.Value.Execution;
+    }
+
+    return new ModelExecutionConfig();
+}
+
+(int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) GetModelProfile(string model)
+{
+    ModelExecutionConfig configured = GetExecutionConfigForModel(model);
+    string m = model.ToLowerInvariant();
+    bool tools = configured.SupportsTools ?? true;
+    bool vision = configured.SupportsVision ?? (m.Contains("vision") || m.Contains("-vl") || m.Contains("neva") || m.Contains("vila") || m.Contains("fuyu") || m.Contains("kosmos"));
     int ctx, maxOut;
 
+    // Hard exclude non-chat families first (must run before generic 'nemotron/llama' branches)
+    if (m.Contains("guard") || m.Contains("safety") || m.Contains("embed") || m.Contains("retriever") || m.Contains("reranker") || m.Contains("reward") || m.Contains("parse") || m.Contains("detector") || m.Contains("clip") || m.Contains("nv-embed") || m.Contains("embedqa") || m.Contains("cached-model") || m.Contains("rerank") || m.Contains("classification") || m.Contains("riva-translate") || m.Contains("synthetic-video"))
+    { ctx = 0; maxOut = 0; tools = false; }
     // DeepSeek models: 1M context, 384K output
-    if (m.Contains("deepseek"))
+    else if (m.Contains("deepseek"))
     { ctx = 1_000_000; maxOut = 384_000; }
     // NVIDIA Nemotron Super (1M context)
     else if (m.Contains("nemotron-3-super"))
@@ -604,16 +796,17 @@ string[] ExtractModels(JsonElement root)
     // Palmyra
     else if (m.Contains("palmyra"))
     { ctx = 32768; maxOut = 4096; }
-    // Safety / Embed / Guard / Reranker / Reward / Clip / Parse / Detector / cached-model / Translate — exclude from chat
-    else if (m.Contains("guard") || m.Contains("safety") || m.Contains("embed") || m.Contains("retriever") || m.Contains("reranker") || m.Contains("reward") || m.Contains("parse") || m.Contains("detector") || m.Contains("clip") || m.Contains("nv-embed") || m.Contains("embedqa") || m.Contains("cached-model") || m.Contains("rerank") || m.Contains("classification") || m.Contains("riva-translate") || m.Contains("synthetic-video"))
-    { ctx = 0; maxOut = 0; tools = false; }
     // Default fallback
     else
     { ctx = 128_000; maxOut = 8192; }
 
+    ctx = configured.ContextLength ?? ctx;
+    maxOut = configured.MaxOutputTokens ?? maxOut;
+
     string[] capabilities = vision ? ["completion", "tools", "vision"] : ["completion", "tools"];
 
-    string family = m.Contains("deepseek") ? "deepseek"
+    string family = configured.Family
+        ?? (m.Contains("deepseek") ? "deepseek"
         : m.Contains("nemotron") || m.Contains("llama-3.1-nemotron") || m.Contains("llama-3.3-nemotron") || m.Contains("nvidia-nemotron") || m.Contains("cosmos-reason") ? "nvidia"
         : m.Contains("llama") || m.Contains("codellama") ? "meta"
         : m.Contains("mistral") || m.Contains("mixtral") || m.Contains("codestral") || m.Contains("ministral") ? "mistralai"
@@ -623,15 +816,16 @@ string[] ExtractModels(JsonElement root)
         : m.Contains("granite") ? "ibm"
         : m.Contains("gpt-oss") ? "openai"
         : m.Contains("nemotron") ? "nvidia"
-        : MODEL_TO_PROVIDER.TryGetValue(model, out var prov) ? prov.Name
-        : "api";
+        : MODEL_TO_PROVIDER.TryGetValue(model, out ProviderInfo prov) ? prov.Name
+        : "api");
 
     return (ctx, maxOut, tools, vision, capabilities, family);
 }
 
 Dictionary<string, object?> BuildOllamaShowResponse(string model)
 {
-    var p = GetModelProfile(model);
+    (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) p = GetModelProfile(model);
+    ModelExecutionConfig exec = GetExecutionConfigForModel(model);
 
     return new Dictionary<string, object?>
     {
@@ -641,7 +835,7 @@ Dictionary<string, object?> BuildOllamaShowResponse(string model)
         ["digest"] = "sha256:0000000000000000000000000000000000000000000000000000000000000000",
         ["license"] = "NIM API",
         ["modelfile"] = $"FROM {model}",
-        ["parameters"] = $"num_ctx {p.ContextLength}\nnum_predict {p.MaxOutputTokens}",
+        ["parameters"] = BuildOllamaParametersString(p.ContextLength, p.MaxOutputTokens, exec),
         ["template"] = "{{ .Prompt }}",
         ["details"] = new Dictionary<string, object?>
         {
@@ -674,8 +868,108 @@ Dictionary<string, object?> BuildOllamaShowResponse(string model)
         ["supports_tools"] = p.SupportsTools,
         ["supports_tool_calls"] = p.SupportsTools,
         ["supports_vision"] = p.SupportsVision,
-        ["supports_images"] = p.SupportsVision
+        ["supports_images"] = p.SupportsVision,
+        ["recommended_parameters"] = BuildRecommendedParameters(exec)
     };
+}
+
+Dictionary<string, object?> BuildRecommendedParameters(ModelExecutionConfig exec)
+{
+    Dictionary<string, object?> result = new();
+
+    if (exec.Temperature.HasValue)
+        result["temperature"] = exec.Temperature.Value;
+    if (exec.TopP.HasValue)
+        result["top_p"] = exec.TopP.Value;
+    if (exec.MaxTokensPreferred.HasValue)
+        result["max_tokens"] = exec.MaxTokensPreferred.Value;
+    if (!string.IsNullOrWhiteSpace(exec.ReasoningEffort))
+        result["reasoning_effort"] = exec.ReasoningEffort;
+    if (exec.TimeoutSeconds.HasValue)
+        result["timeout_seconds"] = exec.TimeoutSeconds.Value;
+
+    return result;
+}
+
+string BuildOllamaParametersString(int contextLength, int maxOutputTokens, ModelExecutionConfig exec)
+{
+    List<string> lines =
+    [
+        $"num_ctx {contextLength}",
+        $"num_predict {maxOutputTokens}"
+    ];
+
+    if (exec.Temperature.HasValue)
+        lines.Add($"temperature {exec.Temperature.Value:0.###}");
+    if (exec.TopP.HasValue)
+        lines.Add($"top_p {exec.TopP.Value:0.###}");
+    if (exec.MaxTokensPreferred.HasValue)
+        lines.Add($"max_tokens {exec.MaxTokensPreferred.Value}");
+    if (!string.IsNullOrWhiteSpace(exec.ReasoningEffort))
+        lines.Add($"reasoning_effort {exec.ReasoningEffort}");
+
+    return string.Join("\n", lines);
+}
+
+CancellationTokenSource? CreateModelTimeoutCts(string model, CancellationToken outer)
+{
+    ModelExecutionConfig exec = GetExecutionConfigForModel(model);
+    if (!exec.TimeoutSeconds.HasValue || exec.TimeoutSeconds.Value <= 0)
+        return null;
+
+    CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(outer);
+    linked.CancelAfter(TimeSpan.FromSeconds(exec.TimeoutSeconds.Value));
+    return linked;
+}
+
+string ApplyExecutionDefaults(string rawBody, string model)
+{
+    ModelExecutionConfig exec = GetExecutionConfigForModel(model);
+    if (!exec.Temperature.HasValue && !exec.TopP.HasValue && !exec.MaxTokensPreferred.HasValue && string.IsNullOrWhiteSpace(exec.ReasoningEffort))
+        return rawBody;
+
+    try
+    {
+        using JsonDocument original = JsonDocument.Parse(rawBody);
+        JsonElement root = original.RootElement;
+        using MemoryStream ms = new();
+        using Utf8JsonWriter writer = new(ms);
+
+        writer.WriteStartObject();
+
+        bool hasTemperature = false;
+        bool hasTopP = false;
+        bool hasMaxTokens = false;
+        bool hasReasoningEffort = false;
+
+        foreach (JsonProperty prop in root.EnumerateObject())
+        {
+            if (prop.NameEquals("temperature")) hasTemperature = true;
+            else if (prop.NameEquals("top_p")) hasTopP = true;
+            else if (prop.NameEquals("max_tokens")) hasMaxTokens = true;
+            else if (prop.NameEquals("reasoning_effort")) hasReasoningEffort = true;
+
+            prop.WriteTo(writer);
+        }
+
+        if (!hasTemperature && exec.Temperature.HasValue)
+            writer.WriteNumber("temperature", exec.Temperature.Value);
+        if (!hasTopP && exec.TopP.HasValue)
+            writer.WriteNumber("top_p", exec.TopP.Value);
+        if (!hasMaxTokens && exec.MaxTokensPreferred.HasValue)
+            writer.WriteNumber("max_tokens", exec.MaxTokensPreferred.Value);
+        if (!hasReasoningEffort && !string.IsNullOrWhiteSpace(exec.ReasoningEffort))
+            writer.WriteString("reasoning_effort", exec.ReasoningEffort);
+
+        writer.WriteEndObject();
+        writer.Flush();
+
+        return Encoding.UTF8.GetString(ms.ToArray());
+    }
+    catch
+    {
+        return rawBody;
+    }
 }
 
 string? ModifyRequest(JsonDocument doc)
@@ -878,4 +1172,17 @@ async Task StreamAndCache(HttpResponseMessage upstream, HttpResponse downstream,
 // ══════════════════════════════════════════════════════════════════════
 
 record struct ProviderInfo(string Name, string ApiKey, string BaseUrl, HttpClient Client);
+record struct ModelSelectionEntry(string Match, int Priority, bool Enabled, ModelExecutionConfig Execution);
+record struct ModelExecutionConfig(
+    int? ContextLength = null,
+    int? MaxOutputTokens = null,
+    bool? SupportsTools = null,
+    bool? SupportsVision = null,
+    string? Family = null,
+    double? Temperature = null,
+    double? TopP = null,
+    int? MaxTokensPreferred = null,
+    string? ReasoningEffort = null,
+    int? TimeoutSeconds = null
+);
 

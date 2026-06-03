@@ -1,0 +1,242 @@
+{
+  "summary": {
+    "generated_at_utc": "2026-06-03T15:12:39.4437695Z",
+    "total": 10,
+    "success": 5,
+    "failed": 5,
+    "endpoint": "http://localhost:11434/v1/chat/completions",
+    "note": "Prueba de envío de parámetros óptimos sobre top10 curado"
+  },
+  "models": [
+    {
+      "model": "deepseek-ai/deepseek-v4-pro",
+      "family": "deepseek",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 1000000,
+        "max_output_tokens": 384000,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.2
+      },
+      "test": {
+        "success": false,
+        "status": "error",
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 30 seconds elapsing.",
+        "latency_ms": 30029,
+        "sample_response": ""
+      }
+    },
+    {
+      "model": "qwen/qwen3-coder-480b-a35b-instruct",
+      "family": "qwen",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.15
+      },
+      "test": {
+        "success": true,
+        "status": "ok",
+        "error": "",
+        "latency_ms": 1295,
+        "sample_response": "OK"
+      }
+    },
+    {
+      "model": "qwen/qwen3.5-397b-a17b",
+      "family": "qwen",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 8192,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.3
+      },
+      "test": {
+        "success": true,
+        "status": "ok",
+        "error": "",
+        "latency_ms": 9773,
+        "sample_response": "OK"
+      }
+    },
+    {
+      "model": "mistralai/mistral-large-3-675b-instruct-2512",
+      "family": "mistralai",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.3
+      },
+      "test": {
+        "success": false,
+        "status": "error",
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 30 seconds elapsing.",
+        "latency_ms": 30004,
+        "sample_response": ""
+      }
+    },
+    {
+      "model": "meta/llama-4-maverick-17b-128e-instruct",
+      "family": "meta",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.3
+      },
+      "test": {
+        "success": false,
+        "status": "error",
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 30 seconds elapsing.",
+        "latency_ms": 30010,
+        "sample_response": ""
+      }
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "family": "nvidia",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.2
+      },
+      "test": {
+        "success": false,
+        "status": "error",
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "latency_ms": 518,
+        "sample_response": ""
+      }
+    },
+    {
+      "model": "nvidia/nemotron-4-340b-instruct",
+      "family": "nvidia",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.2
+      },
+      "test": {
+        "success": false,
+        "status": "error",
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "latency_ms": 205,
+        "sample_response": ""
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "family": "openai",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.3
+      },
+      "test": {
+        "success": true,
+        "status": "ok",
+        "error": "",
+        "latency_ms": 1772,
+        "sample_response": "OK"
+      }
+    },
+    {
+      "model": "moonshotai/kimi-k2.6",
+      "family": "nvidia",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 8192,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.3
+      },
+      "test": {
+        "success": true,
+        "status": "ok",
+        "error": "",
+        "latency_ms": 655,
+        "sample_response": " OK"
+      }
+    },
+    {
+      "model": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "family": "nvidia",
+      "capabilities": {
+        "supports_tools": true,
+        "context_length": 128000,
+        "max_output_tokens": 16384,
+        "supports_vision": false
+      },
+      "sent_parameters": {
+        "top_p": 0.9,
+        "max_tokens": 1024,
+        "stream": false,
+        "temperature": 0.2
+      },
+      "test": {
+        "success": true,
+        "status": "ok",
+        "error": "",
+        "latency_ms": 853,
+        "sample_response": "OK"
+      }
+    }
+  ]
+}

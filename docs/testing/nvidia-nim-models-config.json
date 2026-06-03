@@ -1,0 +1,2485 @@
+{
+  "summary": {
+    "generated_at_utc": "2026-06-03T15:01:02.8450333Z",
+    "total_models": 95,
+    "successful": 23,
+    "failed": 72,
+    "source": "http://localhost:11434/api/tags",
+    "notes": [
+      "Configuración óptima heurística por familia de modelo",
+      "Capacidades y límites base tomados de /api/tags del proxy"
+    ]
+  },
+  "models": [
+    {
+      "model": "01-ai/yi-large",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:41.3363443Z",
+      "test": {
+        "latency_ms": 520,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "abacusai/dracarys-llama-3.1-70b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:49.7410039Z",
+      "test": {
+        "latency_ms": 8397,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "adept/fuyu-8b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:49.9302396Z",
+      "test": {
+        "latency_ms": 189,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "ai21labs/jamba-1.5-large-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:50.1153426Z",
+      "test": {
+        "latency_ms": 184,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "aisingapore/sea-lion-7b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:50.2993352Z",
+      "test": {
+        "latency_ms": 183,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "baai/bge-m3",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:50.4632382Z",
+      "test": {
+        "latency_ms": 163,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "bigcode/starcoder2-15b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:50.6375132Z",
+      "test": {
+        "latency_ms": 173,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 16384
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "bytedance/seed-oss-36b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:52.1649715Z",
+      "test": {
+        "latency_ms": 1527,
+        "success": false,
+        "error": "",
+        "status": "empty_response",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "databricks/dbrx-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:52.3515229Z",
+      "test": {
+        "latency_ms": 186,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "deepseek-ai/deepseek-coder-6.7b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:56:52.5381501Z",
+      "test": {
+        "latency_ms": 186,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 384000,
+        "context_length": 1000000
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "deepseek-ai/deepseek-v4-flash",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:07.5523963Z",
+      "test": {
+        "latency_ms": 15013,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 384000,
+        "context_length": 1000000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "deepseek-ai/deepseek-v4-pro",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:22.5600129Z",
+      "test": {
+        "latency_ms": 15006,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 384000,
+        "context_length": 1000000
+      },
+      "optimal_parameters": {
+        "temperature": 0.2,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/codegemma-1.1-7b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:23.0430563Z",
+      "test": {
+        "latency_ms": 482,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 8192
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/codegemma-7b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:23.2411317Z",
+      "test": {
+        "latency_ms": 197,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 8192
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/deplot",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:23.4347635Z",
+      "test": {
+        "latency_ms": 193,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/gemma-2-2b-it",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:23.7338513Z",
+      "test": {
+        "latency_ms": 298,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 8192
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/gemma-2b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:23.9199744Z",
+      "test": {
+        "latency_ms": 185,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 8192
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/gemma-3-12b-it",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:24.1193710Z",
+      "test": {
+        "latency_ms": 199,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/gemma-3-4b-it",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:24.3162939Z",
+      "test": {
+        "latency_ms": 196,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/gemma-3n-e2b-it",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:24.7705471Z",
+      "test": {
+        "latency_ms": 454,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK "
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/gemma-3n-e4b-it",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:25.2152511Z",
+      "test": {
+        "latency_ms": 444,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK "
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/gemma-4-31b-it",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:40.2238299Z",
+      "test": {
+        "latency_ms": 15007,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "google/recurrentgemma-2b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:40.7079279Z",
+      "test": {
+        "latency_ms": 483,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 8192
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "ibm/granite-3.0-3b-a800m-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:40.9049870Z",
+      "test": {
+        "latency_ms": 196,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "ibm/granite-3.0-8b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:41.1043479Z",
+      "test": {
+        "latency_ms": 199,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "ibm/granite-34b-code-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:41.2846108Z",
+      "test": {
+        "latency_ms": 180,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "ibm/granite-8b-code-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:41.4715716Z",
+      "test": {
+        "latency_ms": 186,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/codellama-70b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:41.6672024Z",
+      "test": {
+        "latency_ms": 195,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 4096
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-3.1-70b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:42.4933302Z",
+      "test": {
+        "latency_ms": 825,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-3.1-8b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:42.8885801Z",
+      "test": {
+        "latency_ms": 395,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-3.2-11b-vision-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:51.6450134Z",
+      "test": {
+        "latency_ms": 8755,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-3.2-1b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:52.2721851Z",
+      "test": {
+        "latency_ms": 627,
+        "success": false,
+        "error": "Response status code does not indicate success: 415 (Unsupported Media Type).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-3.2-3b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:57:52.6657301Z",
+      "test": {
+        "latency_ms": 393,
+        "success": false,
+        "error": "Response status code does not indicate success: 415 (Unsupported Media Type).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-3.2-90b-vision-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:07.6718554Z",
+      "test": {
+        "latency_ms": 15005,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-3.3-70b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:08.5029682Z",
+      "test": {
+        "latency_ms": 830,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama-4-maverick-17b-128e-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:23.5195947Z",
+      "test": {
+        "latency_ms": 15015,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "meta/llama2-70b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:24.0031356Z",
+      "test": {
+        "latency_ms": 483,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "microsoft/kosmos-2",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:24.2013407Z",
+      "test": {
+        "latency_ms": 198,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "microsoft/phi-3-vision-128k-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:24.3886360Z",
+      "test": {
+        "latency_ms": 187,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 4096,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "microsoft/phi-3.5-moe-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:24.5740204Z",
+      "test": {
+        "latency_ms": 185,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "microsoft/phi-4-mini-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:24.8417004Z",
+      "test": {
+        "latency_ms": 267,
+        "success": false,
+        "error": "Response status code does not indicate success: 415 (Unsupported Media Type).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "microsoft/phi-4-multimodal-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:25.0066857Z",
+      "test": {
+        "latency_ms": 164,
+        "success": false,
+        "error": "Response status code does not indicate success: 400 (Bad Request).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "minimaxai/minimax-m2.7",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:40.0128159Z",
+      "test": {
+        "latency_ms": 15005,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/codestral-22b-instruct-v0.1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:40.6722740Z",
+      "test": {
+        "latency_ms": 659,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/ministral-14b-instruct-2512",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:40.9737348Z",
+      "test": {
+        "latency_ms": 301,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mistral-7b-instruct-v0.3",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:41.4658480Z",
+      "test": {
+        "latency_ms": 491,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": " OK! How can I assist you today?"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mistral-large",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:41.6529139Z",
+      "test": {
+        "latency_ms": 186,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mistral-large-2-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:41.8503091Z",
+      "test": {
+        "latency_ms": 197,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mistral-large-3-675b-instruct-2512",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:58:56.8587592Z",
+      "test": {
+        "latency_ms": 15007,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mistral-medium-3.5-128b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:07.4557291Z",
+      "test": {
+        "latency_ms": 10596,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mistral-nemotron",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:07.8508817Z",
+      "test": {
+        "latency_ms": 395,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mistral-small-4-119b-2603",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:08.0813188Z",
+      "test": {
+        "latency_ms": 230,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mixtral-8x22b-v0.1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:08.2674194Z",
+      "test": {
+        "latency_ms": 185,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 65536
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "mistralai/mixtral-8x7b-instruct-v0.1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:09.2301512Z",
+      "test": {
+        "latency_ms": 962,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": " I'm here to help! However, I need a little more context to provide an accurate and helpful response. Could"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "moonshotai/kimi-k2.6",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:10.4569185Z",
+      "test": {
+        "latency_ms": 1226,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": " OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nv-mistralai/mistral-nemo-12b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:10.6557676Z",
+      "test": {
+        "latency_ms": 198,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/cosmos-reason2-8b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:10.8424415Z",
+      "test": {
+        "latency_ms": 186,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.2,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/gliner-pii",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:11.1225450Z",
+      "test": {
+        "latency_ms": 279,
+        "success": false,
+        "error": "Response status code does not indicate success: 422 (Unprocessable Entity).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/ising-calibration-1-35b-a3b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:11.6848819Z",
+      "test": {
+        "latency_ms": 562,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "Thinking Process: 1. **Analyze the Request:** The user is asking me to reply exactly with the word"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-51b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:11.8706483Z",
+      "test": {
+        "latency_ms": 185,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:12.0547339Z",
+      "test": {
+        "latency_ms": 183,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-nano-8b-v1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:12.3481519Z",
+      "test": {
+        "latency_ms": 293,
+        "success": false,
+        "error": "Response status code does not indicate success: 415 (Unsupported Media Type).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-nano-vl-8b-v1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:12.6104440Z",
+      "test": {
+        "latency_ms": 262,
+        "success": false,
+        "error": "Response status code does not indicate success: 415 (Unsupported Media Type).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:12.7949399Z",
+      "test": {
+        "latency_ms": 184,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:13.2414261Z",
+      "test": {
+        "latency_ms": 446,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:14.1675659Z",
+      "test": {
+        "latency_ms": 925,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/llama3-chatqa-1.5-70b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:14.3513597Z",
+      "test": {
+        "latency_ms": 183,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/mistral-nemo-minitron-8b-8k-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:14.5441031Z",
+      "test": {
+        "latency_ms": 192,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nemotron-3-nano-30b-a3b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:15.0211536Z",
+      "test": {
+        "latency_ms": 476,
+        "success": false,
+        "error": "",
+        "status": "empty_response",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:16.1149541Z",
+      "test": {
+        "latency_ms": 1093,
+        "success": false,
+        "error": "",
+        "status": "empty_response",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.2,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:27.7230532Z",
+      "test": {
+        "latency_ms": 11607,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "User says: \"Reply exactly OK\". So we must output exactly \"OK\". No extra spaces or punctuation. Must"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 1000000
+      },
+      "optimal_parameters": {
+        "temperature": 0.2,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nemotron-4-340b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:27.9233650Z",
+      "test": {
+        "latency_ms": 199,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nemotron-mini-4b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:28.1854864Z",
+      "test": {
+        "latency_ms": 261,
+        "success": false,
+        "error": "Response status code does not indicate success: 415 (Unsupported Media Type).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nemotron-nano-12b-v2-vl",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:28.5039739Z",
+      "test": {
+        "latency_ms": 318,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK "
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nemotron-nano-3-30b-a3b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:28.8324220Z",
+      "test": {
+        "latency_ms": 328,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/neva-22b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:29.0285709Z",
+      "test": {
+        "latency_ms": 195,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/nvidia-nemotron-nano-9b-v2",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:44.0470085Z",
+      "test": {
+        "latency_ms": 15017,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "nvidia/vila",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:44.5534062Z",
+      "test": {
+        "latency_ms": 506,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": true,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:49.9285827Z",
+      "test": {
+        "latency_ms": 5374,
+        "success": false,
+        "error": "",
+        "status": "empty_response",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T14:59:50.3891525Z",
+      "test": {
+        "latency_ms": 460,
+        "success": false,
+        "error": "",
+        "status": "empty_response",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "qwen/qwen3-coder-480b-a35b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:05.3924875Z",
+      "test": {
+        "latency_ms": 15002,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.15,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "qwen/qwen3-next-80b-a3b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:20.3972532Z",
+      "test": {
+        "latency_ms": 15003,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "qwen/qwen3.5-122b-a10b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:35.4116321Z",
+      "test": {
+        "latency_ms": 15013,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "qwen/qwen3.5-397b-a17b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:41.6698787Z",
+      "test": {
+        "latency_ms": 6257,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "OK"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "sarvamai/sarvam-m",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:41.9643282Z",
+      "test": {
+        "latency_ms": 294,
+        "success": false,
+        "error": "Response status code does not indicate success: 415 (Unsupported Media Type).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "stepfun-ai/step-3.5-flash",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:44.0200435Z",
+      "test": {
+        "latency_ms": 2055,
+        "success": false,
+        "error": "",
+        "status": "empty_response",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "stepfun-ai/step-3.7-flash",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:44.7486758Z",
+      "test": {
+        "latency_ms": 728,
+        "success": false,
+        "error": "",
+        "status": "empty_response",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 16384,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "stockmark/stockmark-2-100b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:45.7031021Z",
+      "test": {
+        "latency_ms": 954,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "はい、わかりました。正確に返信します。何か特定の質問や話題はありますか?"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "upstage/solar-10.7b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:46.6001387Z",
+      "test": {
+        "latency_ms": 895,
+        "success": true,
+        "error": "",
+        "status": "ok",
+        "sample_response": "Exactly OK. Your message has been received and understood. Is there anything else I can assist you with?"
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 4096
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "writer/palmyra-creative-122b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:46.7973933Z",
+      "test": {
+        "latency_ms": 197,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "writer/palmyra-fin-70b-32k",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:46.9798934Z",
+      "test": {
+        "latency_ms": 182,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "writer/palmyra-med-70b",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:47.1665591Z",
+      "test": {
+        "latency_ms": 186,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "writer/palmyra-med-70b-32k",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:00:47.3491222Z",
+      "test": {
+        "latency_ms": 182,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 32768
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "z-ai/glm-5.1",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:01:02.3631346Z",
+      "test": {
+        "latency_ms": 15012,
+        "success": false,
+        "error": "The request was canceled due to the configured HttpClient.Timeout of 15 seconds elapsing.",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 8192,
+        "context_length": 128000
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    },
+    {
+      "model": "zyphra/zamba2-7b-instruct",
+      "provider": "nvidia_nim",
+      "tested_at_utc": "2026-06-03T15:01:02.8448127Z",
+      "test": {
+        "latency_ms": 481,
+        "success": false,
+        "error": "Response status code does not indicate success: 404 (Not Found).",
+        "status": "error",
+        "sample_response": ""
+      },
+      "capabilities": {
+        "supports_tools": true,
+        "supports_vision": false,
+        "max_output_tokens": 4096,
+        "context_length": 4096
+      },
+      "optimal_parameters": {
+        "temperature": 0.3,
+        "stream": true,
+        "response_format": "text",
+        "max_tokens": 4096,
+        "tool_choice": "auto",
+        "top_p": 0.9
+      }
+    }
+  ]
+}

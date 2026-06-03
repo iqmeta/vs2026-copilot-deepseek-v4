@@ -1,0 +1,127 @@
+{
+  "generated_at_utc": "2026-06-03T15:20:00Z",
+  "scope": "Top 10 curated models (benchmark + recency + code/reasoning)",
+  "source_tests": [
+    "docs/testing/top10-optimal-params-send-test.json",
+    "Direct retest to NVIDIA NIM with max_tokens=256 and timeout=90s"
+  ],
+  "defaults": {
+    "top_p": 0.9,
+    "stream": true,
+    "presence_penalty": 0,
+    "response_format": "text",
+    "tool_choice": "auto"
+  },
+  "models": [
+    {
+      "model": "deepseek-ai/deepseek-v4-pro",
+      "status": "slow_or_throttled",
+      "recommended": {
+        "temperature": 0.2,
+        "max_tokens": 256,
+        "reasoning_effort": "high",
+        "timeout_seconds": 120
+      },
+      "notes": "Timed out at 30s and 90s in current account/region conditions."
+    },
+    {
+      "model": "qwen/qwen3-coder-480b-a35b-instruct",
+      "status": "verified_ok",
+      "recommended": {
+        "temperature": 0.15,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 45
+      },
+      "notes": "Stable and fast for code tasks."
+    },
+    {
+      "model": "qwen/qwen3.5-397b-a17b",
+      "status": "verified_ok",
+      "recommended": {
+        "temperature": 0.2,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 60
+      },
+      "notes": "High reasoning quality, moderate latency."
+    },
+    {
+      "model": "mistralai/mistral-large-3-675b-instruct-2512",
+      "status": "slow_or_throttled",
+      "recommended": {
+        "temperature": 0.25,
+        "max_tokens": 256,
+        "reasoning_effort": "medium",
+        "timeout_seconds": 120
+      },
+      "notes": "Timed out at 30s and 90s in current account/region conditions."
+    },
+    {
+      "model": "meta/llama-4-maverick-17b-128e-instruct",
+      "status": "slow_or_throttled",
+      "recommended": {
+        "temperature": 0.25,
+        "max_tokens": 256,
+        "reasoning_effort": "medium",
+        "timeout_seconds": 120
+      },
+      "notes": "Timed out at 30s and 90s in current account/region conditions."
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "status": "not_entitled_or_unavailable",
+      "recommended": {
+        "temperature": 0.2,
+        "max_tokens": 256,
+        "reasoning_effort": "high",
+        "timeout_seconds": 30
+      },
+      "notes": "Returns 404 consistently."
+    },
+    {
+      "model": "nvidia/nemotron-4-340b-instruct",
+      "status": "not_entitled_or_unavailable",
+      "recommended": {
+        "temperature": 0.2,
+        "max_tokens": 256,
+        "reasoning_effort": "high",
+        "timeout_seconds": 30
+      },
+      "notes": "Returns 404 consistently."
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "status": "verified_ok",
+      "recommended": {
+        "temperature": 0.2,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 45
+      },
+      "notes": "Good coding/reasoning tradeoff."
+    },
+    {
+      "model": "moonshotai/kimi-k2.6",
+      "status": "verified_ok",
+      "recommended": {
+        "temperature": 0.25,
+        "max_tokens": 1024,
+        "reasoning_effort": "medium",
+        "timeout_seconds": 45
+      },
+      "notes": "Fast and robust in current tests."
+    },
+    {
+      "model": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "status": "verified_ok",
+      "recommended": {
+        "temperature": 0.2,
+        "max_tokens": 1024,
+        "reasoning_effort": "high",
+        "timeout_seconds": 45
+      },
+      "notes": "Strong reasoning and tool usage."
+    }
+  ]
+}
