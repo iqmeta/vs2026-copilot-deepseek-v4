@@ -177,13 +177,13 @@ Model metadata and defaults are loaded from `config/model-selection/*.json`:
 
 ```
 config/model-selection/
-├── deepseek.json      # DeepSeek models (v4-pro, v4-flash, coder, etc.)
-├── openai.json        # OpenAI models (gpt-5, gpt-4.1, gpt-4o, etc.)
-├── nvidia.json        # NVIDIA/NIM models (deepseek, qwen, nemotron, etc.)
-├── groq.json          # Groq models (llama, qwen, etc.)
-├── openrouter.json    # OpenRouter catalog (free models)
-├── ollamacloud.json   # Ollama Cloud models
-└── moonshot.json      # Moonshot/Kimi models (kimi-k2.6, moonshot-v1-*, etc.)
+├── deepseek.json      # DeepSeek (v4-pro, v4-flash, coder-6.7b)
+├── openai.json        # OpenAI (gpt-5, gpt-5-mini, gpt-4.1, gpt-4o)
+├── nvidia.json        # NVIDIA NIM (8 modelos: deepseek, qwen, nemotron, etc.)
+├── groq.json          # Groq (llama-3.3-70b, qwen3-32b, llama-4-scout, gpt-oss-120b)
+├── openrouter.json    # OpenRouter free (nemotron-3-super:free, qwen3-coder:free)
+├── ollamacloud.json   # Ollama Cloud (gemma3:4b, nemotron-3-super)
+└── moonshot.json      # Moonshot/Kimi (kimi-k2.6, moonshot-v1-*)
 ```
 
 ### Example: DeepSeek Configuration
