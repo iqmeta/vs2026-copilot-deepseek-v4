@@ -8,7 +8,7 @@ A high-performance, ultra-low-overhead HTTP proxy that connects GitHub Copilot a
 
 | 🏗️ | Details |
 |---|---|
-| **Providers** | DeepSeek, OpenAI, NVIDIA NIM, Groq, OpenRouter, Ollama Cloud |
+| **Providers** | DeepSeek, OpenAI, NVIDIA NIM, Groq, OpenRouter, Ollama Cloud, Moonshot/Kimi |
 | **Models** | Auto-discovered from each provider |
 | **Default Port** | `11434` |
 | **Framework** | .NET 10 |
@@ -181,6 +181,7 @@ DeepSeek models return `reasoning_content` with their responses. The proxy:
 | **Groq** | mixtral-8x7b, llama3-70b | 32K | 8K | ⚠️ | ❌ |
 | **OpenRouter** | All available (100+) | Varies | Varies | Varies | Varies |
 | **Ollama Cloud** | All available | Varies | Varies | Varies | Varies |
+| **Moonshot/Kimi** | kimi-k2.6, kimi-k2.5, moonshot-v1 | 256K | 128K | ✅ | ✅ (vision) |
 
 **[→ Configuration Guide](docs/CONFIGURATION.md#context-window-specifications)**
 

@@ -101,6 +101,7 @@ Configured providers are defined in `Services/ProviderRegistry.cs` and instantia
 | **OpenRouter** | `https://openrouter.ai/api/v1` | ✅ Fully supported |
 | **Groq** | `https://api.groq.com/openai/v1` | ✅ Fully supported |
 | **Ollama Cloud** | `https://api.ollama.cloud/api` | ✅ Fully supported |
+| **Moonshot/Kimi** | `https://api.moonshot.ai/v1` | ✅ Fully supported |
 
 ### Provider Selection Logic
 
@@ -355,6 +356,17 @@ All models and their context window limits are documented here:
 ### OpenRouter Models
 
 See https://openrouter.ai/models for the complete catalog.
+
+### Moonshot/Kimi Models
+
+| Model | Context | Max Output | Input Cost | Output Cost | Vision |
+|-------|---------|-----------|-----------|----------|--------|
+| kimi-k2.6 | 256k tokens | 128k | Competitive | Competitive | ✅ |
+| kimi-k2.5 | 256k tokens | 64k | Competitive | Competitive | ❌ |
+| moonshot-v1-128k | 128k tokens | 32k | Competitive | Competitive | ✅ |
+| moonshot-v1-auto | 128k tokens | 32k | Competitive | Competitive | ❌ |
+| moonshot-v1-32k | 32k tokens | 8k | Competitive | Competitive | ✅ |
+| moonshot-v1-8k | 8k tokens | 4k | Competitive | Competitive | ✅ |
 
 ---
 

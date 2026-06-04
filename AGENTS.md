@@ -4,7 +4,7 @@ Optimized documentation for GitHub Copilot, Claude, and other AI code assistants
 
 ## Project Essence
 
-**Multi-Provider AI Proxy** — Single HTTP gateway to DeepSeek, OpenAI, NVIDIA, Groq, OpenRouter, and Ollama Cloud.
+**Multi-Provider AI Proxy** — Single HTTP gateway to DeepSeek, OpenAI, NVIDIA, Groq, OpenRouter, Ollama Cloud, and Moonshot/Kimi.
 
 - **Dual API Support:** OpenAI-compatible (`/v1/*`) + Ollama-compatible (`/api/*`)
 - **Smart Routing:** Model names auto-map to providers with intelligent fallback
