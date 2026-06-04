@@ -123,7 +123,7 @@ internal sealed class ProviderRegistry
                     "openai" => "https://api.openai.com",
                     "nvidia" => "https://integrate.api.nvidia.com",
                     "openrouter" => "https://openrouter.ai/api/",
-                    "groq" => "https://api.groq.com/openai/",
+                    "groq" => "https://api.groq.com/openai",
                     "ollama" => "https://ollama.com",
                     "moonshot" => "https://api.moonshot.ai",
                     _ => ""

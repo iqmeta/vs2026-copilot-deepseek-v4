@@ -11,7 +11,7 @@
         "supports_tools": true,
         "supports_vision": false,
         "family": "moonshotai",
-        "top_p": 0.9,
+        "top_p": 0.95,
         "max_tokens": 4096,
         "timeout_seconds": 60
       }
