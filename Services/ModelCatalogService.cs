@@ -267,6 +267,67 @@ internal sealed class ModelCatalogService
     internal ModelExecutionConfig GetExecutionConfigForModel(string model) =>
         _modelSelectionStore.GetExecutionConfigForModel(model, _providerRegistry.ModelToProvider);
 
+    /// <summary>
+    /// Ensures the configured default model (from DEEPSEEK_MODEL env var) is always in
+    /// <see cref="AvailableModels"/>, even when the owning provider's model discovery
+    /// fails (e.g. expired API key, temporary network issue).
+    /// </summary>
+    internal void EnsureDefaultModelPresent(CancellationToken ct)
+    {
+        string defaultModel = _providerRegistry.DefaultModel;
+        if (AvailableModels.Any(m => string.Equals(m, defaultModel, StringComparison.OrdinalIgnoreCase)))
+        {
+            return; // already present
+        }
+
+        // The default model is not in the discovered list. Try to find its provider
+        // and add a bare entry so it's always selectable in Copilot BYOM.
+        foreach (ProviderInfo prov in _providerRegistry.Providers)
+        {
+            if (!_modelSelectionStore.IsPreferredModel(defaultModel, prov.Name))
+            {
+                continue;
+            }
+
+            // Register the default model with this provider.
+            Dictionary<string, ProviderInfo> newMap = new(_providerRegistry.ModelToProvider, StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> newUpstream = new(_providerRegistry.ModelToUpstream, StringComparer.OrdinalIgnoreCase);
+
+            string bare = defaultModel;
+            if (!newMap.ContainsKey(bare))
+            {
+                newMap[bare] = prov;
+                newUpstream[bare] = bare;
+            }
+
+            string qualified = $"{bare}@{prov.Name}";
+            if (!newMap.ContainsKey(qualified))
+            {
+                newMap[qualified] = prov;
+                newUpstream[qualified] = bare;
+            }
+
+            _providerRegistry.UpdateModelMappings(newMap, newUpstream);
+
+            // Prepend the default model to AvailableModels, keeping all existing discovered models.
+            AvailableModels = [bare, .. AvailableModels.Where(m => !string.Equals(m, bare, StringComparison.OrdinalIgnoreCase))];
+            return;
+        }
+
+        // Fallback: no configured provider matches the default model, add it anyway
+        // with the first available provider.
+        if (_providerRegistry.Providers.Count > 0)
+        {
+            ProviderInfo first = _providerRegistry.Providers[0];
+            Dictionary<string, ProviderInfo> newMap = new(_providerRegistry.ModelToProvider, StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> newUpstream = new(_providerRegistry.ModelToUpstream, StringComparer.OrdinalIgnoreCase);
+            newMap[defaultModel] = first;
+            newUpstream[defaultModel] = defaultModel;
+            _providerRegistry.UpdateModelMappings(newMap, newUpstream);
+            AvailableModels = [defaultModel, .. AvailableModels.Where(m => !string.Equals(m, defaultModel, StringComparison.OrdinalIgnoreCase))];
+        }
+    }
+
     private static async Task<string[]> TryGetModelsFromProvider(ProviderInfo provider, CancellationToken ct)
     {
         try

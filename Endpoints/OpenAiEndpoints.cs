@@ -6,16 +6,73 @@ internal static class OpenAiEndpoints
 {
     internal static IEndpointRouteBuilder MapOpenAiEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/v1/models", async (HttpContext ctx, ModelCatalogService modelCatalog, ProviderRegistry providerRegistry) =>
+        app.MapGet("/v1/models", (HttpContext ctx, ModelCatalogService modelCatalog, ProviderRegistry providerRegistry, ModelSelectionStore modelSelectionStore) =>
         {
-            await modelCatalog.RefreshAvailableModelsIfNeeded(ctx.RequestAborted);
+            // Build a complete list from static config files (always available) plus
+            // any models discovered via provider APIs. This ensures models from
+            // config/*.json are always listed even when a provider's API is down.
+            // Dynamic discovery is done in the background (fire-and-forget) so the
+            // response is not delayed by slow provider API calls.
+            _ = modelCatalog.RefreshAvailableModelsIfNeeded(ctx.RequestAborted);
+
+            // Collect all enabled models from the static config files as a stable baseline.
+            // Each provider's configured match strings are the authoritative list.
+            List<(string Provider, string Model)> allModels = [];
+
+            foreach ((string providerName, ModelSelectionEntry[] entries) in modelSelectionStore.ProviderModelSelections)
+            {
+                foreach (ModelSelectionEntry entry in entries)
+                {
+                    if (!entry.Enabled)
+                        continue;
+
+                    string model = entry.Match;
+                    // Some upstream model IDs already include the provider name prefix
+                    // (e.g. "nvidia/llama-3.1-nemotron-70b-instruct"). Avoid duplication.
+                    string displayId = model.StartsWith(providerName + "/", StringComparison.OrdinalIgnoreCase)
+                        ? model
+                        : $"{providerName}/{model}";
+
+                    allModels.Add((providerName, displayId));
+                }
+            }
+
+            // Also include any bare models discovered from provider APIs that aren't
+            // in the static config (deduplicate by display id).
+            HashSet<string> seen = new(allModels.Select(m => m.Model), StringComparer.OrdinalIgnoreCase);
+            foreach (string discovered in modelCatalog.AvailableModels)
+            {
+                if (discovered.Contains('@'))
+                    continue; // skip qualified aliases
+
+                string providerName = providerRegistry.ModelToProvider.TryGetValue(discovered, out ProviderInfo prov)
+                    ? prov.Name
+                    : "unknown";
+
+                string displayId = discovered.StartsWith(providerName + "/", StringComparison.OrdinalIgnoreCase)
+                    ? discovered
+                    : $"{providerName}/{discovered}";
+
+                if (seen.Add(displayId))
+                {
+                    allModels.Add((providerName, displayId));
+                }
+            }
+
+            // Sort by provider name then model name.
+            allModels = allModels.OrderBy(m => m.Provider, StringComparer.OrdinalIgnoreCase)
+                                 .ThenBy(m => m.Model, StringComparer.OrdinalIgnoreCase)
+                                 .ToList();
+
             return Results.Json(new
             {
                 @object = "list",
-                data = modelCatalog.AvailableModels.Select(m =>
+                data = allModels.Select(m => new
                 {
-                    string providerName = providerRegistry.ModelToProvider.TryGetValue(m, out ProviderInfo prov) ? prov.Name : "unknown";
-                    return new { id = m, @object = "model", created = 1700000000, owned_by = providerName };
+                    id = m.Model,
+                    @object = "model",
+                    created = 1700000000,
+                    owned_by = m.Provider
                 }).ToArray()
             }, JsonDefaults.SnakeCase);
         });

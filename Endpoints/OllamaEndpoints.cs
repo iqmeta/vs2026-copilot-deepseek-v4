@@ -8,12 +8,46 @@ internal static class OllamaEndpoints
     {
         app.MapGet("/api/version", () => Results.Json(new { version = "0.5.7" }, JsonDefaults.SnakeCase));
 
-        app.MapGet("/api/tags", async (HttpContext ctx, ModelCatalogService modelCatalog) =>
+        app.MapGet("/api/tags", async (HttpContext ctx, ModelCatalogService modelCatalog, ProviderRegistry providerRegistry, ModelSelectionStore modelSelectionStore) =>
         {
             await modelCatalog.RefreshAvailableModelsIfNeeded(ctx.RequestAborted);
+
+            // Keep the configured default model visible even if provider discovery fails.
+            modelCatalog.EnsureDefaultModelPresent(ctx.RequestAborted);
+
+            // Build /api/tags strictly from enabled model-selection entries so the
+            // Copilot BYOM list stays coherent with config/model-selection/*.json.
+            // Only include providers that are currently active (API key configured).
+            HashSet<string> activeProviders = new(
+                providerRegistry.Providers.Select(p => p.Name),
+                StringComparer.OrdinalIgnoreCase);
+
+            List<(string Model, int Priority)> configuredEnabled = [];
+            foreach ((string providerName, ModelSelectionEntry[] entries) in modelSelectionStore.ProviderModelSelections)
+            {
+                if (!activeProviders.Contains(providerName))
+                    continue;
+
+                foreach (ModelSelectionEntry entry in entries)
+                {
+                    if (!entry.Enabled)
+                        continue;
+
+                    configuredEnabled.Add((entry.Match, entry.Priority));
+                }
+            }
+
+            // Distinct by model id and keep deterministic ordering by priority, then name.
+            string[] models = configuredEnabled
+                .OrderBy(x => x.Priority)
+                .ThenBy(x => x.Model, StringComparer.OrdinalIgnoreCase)
+                .Select(x => x.Model)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
             return Results.Json(new
             {
-                models = modelCatalog.AvailableModels.Select(m =>
+                models = models.Select(m =>
                 {
                     (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) p = modelCatalog.GetModelProfile(m);
                     return new

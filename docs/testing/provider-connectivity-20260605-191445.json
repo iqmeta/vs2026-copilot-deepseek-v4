@@ -1,0 +1,90 @@
+﻿{
+    "generated_at_utc":  "2026-06-05T22:14:45.3305035Z",
+    "summary":  {
+                    "total":  8,
+                    "list_ok":  7,
+                    "chat_ok":  3
+                },
+    "providers":  [
+                      {
+                          "provider":  "deepseek",
+                          "list_status":  "ok",
+                          "models_count":  2,
+                          "chat_status":  "ok",
+                          "chat_model":  "deepseek-v4-flash",
+                          "latency_ms":  1117,
+                          "sample_text":  "OK",
+                          "error":  ""
+                      },
+                      {
+                          "provider":  "openai",
+                          "list_status":  "http_401",
+                          "models_count":  0,
+                          "chat_status":  "not_tested",
+                          "chat_model":  "",
+                          "latency_ms":  0,
+                          "sample_text":  "",
+                          "error":  "Error en el servidor remoto: (401) No autorizado."
+                      },
+                      {
+                          "provider":  "groq",
+                          "list_status":  "ok",
+                          "models_count":  16,
+                          "chat_status":  "ok",
+                          "chat_model":  "llama-3.1-8b-instant",
+                          "latency_ms":  328,
+                          "sample_text":  "OK",
+                          "error":  ""
+                      },
+                      {
+                          "provider":  "openrouter",
+                          "list_status":  "ok",
+                          "models_count":  344,
+                          "chat_status":  "http_401",
+                          "chat_model":  "qwen/qwen3.7-plus",
+                          "latency_ms":  0,
+                          "sample_text":  "",
+                          "error":  "{\"error\":{\"message\":\"Missing Authentication header\",\"code\":401}}"
+                      },
+                      {
+                          "provider":  "nvidia",
+                          "list_status":  "ok",
+                          "models_count":  120,
+                          "chat_status":  "http_404",
+                          "chat_model":  "deepseek-ai/deepseek-coder-6.7b-instruct",
+                          "latency_ms":  0,
+                          "sample_text":  "",
+                          "error":  ""
+                      },
+                      {
+                          "provider":  "moonshot",
+                          "list_status":  "ok",
+                          "models_count":  9,
+                          "chat_status":  "http_400",
+                          "chat_model":  "kimi-k2.6",
+                          "latency_ms":  0,
+                          "sample_text":  "",
+                          "error":  ""
+                      },
+                      {
+                          "provider":  "ollama-cloud",
+                          "list_status":  "ok",
+                          "models_count":  41,
+                          "chat_status":  "http_400",
+                          "chat_model":  "kimi-k2-thinking",
+                          "latency_ms":  0,
+                          "sample_text":  "",
+                          "error":  ""
+                      },
+                      {
+                          "provider":  "cerebras",
+                          "list_status":  "ok",
+                          "models_count":  2,
+                          "chat_status":  "ok",
+                          "chat_model":  "zai-glm-4.7",
+                          "latency_ms":  322,
+                          "sample_text":  "The user wants a very specific response: \"OK\".\n1.  **Analyze the Request:** The user said \"Reply exactly OK\".\n2.  **",
+                          "error":  ""
+                      }
+                  ]
+}
