@@ -199,6 +199,24 @@ internal sealed class ModelSelectionStore
 
                     if (entries.Count > 0)
                     {
+                        // Merge with existing entries for the same provider (multiple files may
+                        // declare the same provider, e.g. ollama.json + ollamacloud.json both use
+                        // "provider": "ollama"). Previously loaded entries are preserved.
+                        if (selections.TryGetValue(provider, out ModelSelectionEntry[] existing))
+                        {
+                            // Start with existing entries, then add new ones (no duplicate match strings).
+                            HashSet<string> existingMatches = new(existing.Select(e => e.Match), StringComparer.OrdinalIgnoreCase);
+                            List<ModelSelectionEntry> merged = [..existing];
+                            foreach (ModelSelectionEntry entry in entries)
+                            {
+                                if (existingMatches.Add(entry.Match))
+                                {
+                                    merged.Add(entry);
+                                }
+                            }
+                            entries = merged;
+                        }
+
                         // Order entries by (priority asc, match length desc). A longer match
                         // substring is more specific than a shorter one, so it wins when two
                         // entries (e.g. "nemotron" vs "nemotron-3-super") both match the

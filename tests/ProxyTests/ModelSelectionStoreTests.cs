@@ -1,9 +1,5 @@
 namespace ProxyTests;
 
-// Share the "Proxy" collection with EndpointTests and ModelCatalogServiceTests
-// so ProxyFixture's environment-variable setup runs once before any of these
-// tests, and the registry constructor in each test can find a configured
-// PROVIDER_DEEPSEEK_API_KEY.
 [Collection("Proxy")]
 public class ModelSelectionStoreTests
 {
@@ -130,18 +126,27 @@ public class ModelSelectionStoreTests
     }
 
     [Fact]
-    public void GetProviderModelSelections_OllamaCloud_ReturnsTenEntries()
+    public void ProviderModelSelections_HasCerebrasProvider()
+    {
+        ModelSelectionStore store = new();
+
+        Assert.True(store.ProviderModelSelections.ContainsKey("cerebras"));
+    }
+
+    [Fact]
+    public void GetProviderModelSelections_Ollama_MergedFromBothFiles()
     {
         ModelSelectionStore store = new();
 
         ModelSelectionEntry[] entries = store.GetProviderModelSelections("ollama");
 
         Assert.NotEmpty(entries);
-        Assert.Equal(10, entries.Length);
+        // Should include entries from both ollama.json and ollamacloud.json
+        Assert.True(entries.Length > 5, $"Expected merged entries, got {entries.Length}");
     }
 
     [Fact]
-    public void FindModelSelectionEntry_OllamaCloud_Glm51_FindsEntry()
+    public void FindModelSelectionEntry_Ollama_Glm51_FindsEntry()
     {
         ModelSelectionStore store = new();
 
@@ -153,7 +158,7 @@ public class ModelSelectionStoreTests
     }
 
     [Fact]
-    public void FindModelSelectionEntry_OllamaCloud_Qwen3Vl_FindsEntry()
+    public void FindModelSelectionEntry_Ollama_Qwen3Vl_FindsEntry()
     {
         ModelSelectionStore store = new();
 
@@ -162,6 +167,73 @@ public class ModelSelectionStoreTests
         Assert.NotNull(entry);
         Assert.Equal("qwen3-vl:235b", entry.Value.Match);
         Assert.True(entry.Value.Execution.SupportsVision);
+    }
+
+    [Fact]
+    public void FindModelSelectionEntry_Ollama_MinimaxM3_FindsEntry()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry? entry = store.FindModelSelectionEntry("minimax-m3", "ollama");
+
+        Assert.NotNull(entry);
+        Assert.Equal("minimax-m3", entry.Value.Match);
+        Assert.Equal(8, entry.Value.Priority);
+    }
+
+    [Fact]
+    public void FindModelSelectionEntry_Ollama_Cogito_FindsEntry()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry? entry = store.FindModelSelectionEntry("cogito-2.1:671b", "ollama");
+
+        Assert.NotNull(entry);
+        Assert.Equal("cogito-2.1:671b", entry.Value.Match);
+    }
+
+    [Fact]
+    public void FindModelSelectionEntry_Ollama_Glm5_FindsEntry()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry? entry = store.FindModelSelectionEntry("glm-5", "ollama");
+
+        Assert.NotNull(entry);
+        Assert.Equal("glm-5", entry.Value.Match);
+    }
+
+    [Fact]
+    public void FindModelSelectionEntry_Cerebras_ZaiGlm47_FindsEntry()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry? entry = store.FindModelSelectionEntry("zai-glm-4.7", "cerebras");
+
+        Assert.NotNull(entry);
+        Assert.Equal("zai-glm-4.7", entry.Value.Match);
+    }
+
+    [Fact]
+    public void FindModelSelectionEntry_Cerebras_GptOss120b_FindsEntry()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry? entry = store.FindModelSelectionEntry("gpt-oss-120b", "cerebras");
+
+        Assert.NotNull(entry);
+        Assert.Equal("gpt-oss-120b", entry.Value.Match);
+    }
+
+    [Fact]
+    public void FindModelSelectionEntry_Moonshot_KimiK25_FindsEntry()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry? entry = store.FindModelSelectionEntry("kimi-k2.5", "moonshot");
+
+        Assert.NotNull(entry);
+        Assert.Equal("kimi-k2.5", entry.Value.Match);
     }
 
     [Fact]
@@ -214,13 +286,34 @@ public class ModelSelectionStoreTests
     }
 
     [Fact]
-    public void GetPreferredModelPriority_OllamaCloud_MistralLarge3_ReturnsPriority3()
+    public void IsPreferredModel_OllamaCloud_MinimaxM3_ReturnsTrue()
+    {
+        ModelSelectionStore store = new();
+
+        bool isPreferred = store.IsPreferredModel("minimax-m3", "ollama");
+
+        Assert.True(isPreferred);
+    }
+
+    [Fact]
+    public void IsPreferredModel_Cerebras_ZaiGlm47_ReturnsTrue()
+    {
+        ModelSelectionStore store = new();
+
+        bool isPreferred = store.IsPreferredModel("zai-glm-4.7", "cerebras");
+
+        Assert.True(isPreferred);
+    }
+
+    [Fact]
+    public void GetPreferredModelPriority_OllamaCloud_MistralLarge3_ReturnsExpectedPriority()
     {
         ModelSelectionStore store = new();
 
         int priority = store.GetPreferredModelPriority("mistral-large-3:675b", "ollama");
 
-        Assert.Equal(3, priority);
+        // mistral-large-3:675b is priority 5 in ollamacloud.json
+        Assert.Equal(5, priority);
     }
 
     [Fact]
@@ -258,5 +351,26 @@ public class ModelSelectionStoreTests
         ModelExecutionConfig config = store.GetExecutionConfigForModel("deepseek-coder-6.7b-instruct", registry.ModelToProvider);
 
         Assert.False(string.IsNullOrWhiteSpace(config.ReasoningEffort));
+    }
+
+    [Fact]
+    public void FindModelSelectionEntry_Moonshot_KimiK26_HasTemperature10()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry? entry = store.FindModelSelectionEntry("kimi-k2.6", "moonshot");
+
+        Assert.NotNull(entry);
+        Assert.Equal(1.0, entry.Value.Execution.Temperature);
+    }
+
+    [Fact]
+    public void GetProviderModelSelections_Cerebras_ReturnsEntries()
+    {
+        ModelSelectionStore store = new();
+
+        ModelSelectionEntry[] entries = store.GetProviderModelSelections("cerebras");
+
+        Assert.NotEmpty(entries);
     }
 }

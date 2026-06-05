@@ -214,8 +214,14 @@ internal sealed class ModelCatalogService
         { ctx = 128_000; maxOut = 8192; }
         else if (m.Contains("step-3"))
         { ctx = 128_000; maxOut = 16384; }
-        else if (m.Contains("glm-5"))
-        { ctx = 128_000; maxOut = 8192; }
+        else if (m.Contains("zai-glm"))
+        { ctx = 128_000; maxOut = 32768; }
+        else if (m.Contains("glm"))
+        { ctx = 128_000; maxOut = 32768; }
+        else if (m.Contains("minimax"))
+        { ctx = 128_000; maxOut = 32768; }
+        else if (m.Contains("cogito"))
+        { ctx = 128_000; maxOut = 32768; }
         else if (m.Contains("solar") || m.Contains("zamba"))
         { ctx = 4096; maxOut = 4096; }
         else if (m.Contains("palmyra"))

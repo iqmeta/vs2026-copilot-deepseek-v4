@@ -112,7 +112,7 @@ internal sealed class ProviderRegistry
 
     private void DiscoverProviders(ProviderHttpClientFactory httpClientFactory)
     {
-        foreach (string providerName in new[] { "deepseek", "openai", "nvidia", "openrouter", "groq", "ollama", "moonshot" })
+        foreach (string providerName in new[] { "deepseek", "openai", "nvidia", "openrouter", "groq", "ollama", "moonshot", "cerebras" })
         {
             string prefix = providerName.ToUpperInvariant();
             string? apiKey = providerName == "ollama"
@@ -136,6 +136,7 @@ internal sealed class ProviderRegistry
                     "groq" => "https://api.groq.com/openai",
                     "ollama" => "https://ollama.com",
                     "moonshot" => "https://api.moonshot.ai",
+                    "cerebras" => "https://api.cerebras.ai",
                     _ => ""
                 }
                 : configuredBaseUrl;

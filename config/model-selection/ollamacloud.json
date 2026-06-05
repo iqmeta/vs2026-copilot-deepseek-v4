@@ -35,7 +35,7 @@
     },
     {
       "match": "mistral-large-3:675b",
-      "priority": 3,
+      "priority": 5,
       "enabled": true,
       "execution": {
         "context_length": 128000,
@@ -51,7 +51,7 @@
     },
     {
       "match": "cogito-2.1:671b",
-      "priority": 4,
+      "priority": 6,
       "enabled": true,
       "execution": {
         "context_length": 128000,
@@ -67,7 +67,7 @@
     },
     {
       "match": "qwen3-coder:480b",
-      "priority": 5,
+      "priority": 7,
       "enabled": true,
       "execution": {
         "context_length": 128000,
@@ -82,8 +82,8 @@
       }
     },
     {
-      "match": "minimax-m2.7",
-      "priority": 6,
+      "match": "minimax-m3",
+      "priority": 8,
       "enabled": true,
       "execution": {
         "context_length": 128000,
@@ -94,12 +94,12 @@
         "temperature": 0.2,
         "top_p": 0.9,
         "max_tokens": 16384,
-        "timeout_seconds": 180
+        "timeout_seconds": 240
       }
     },
     {
       "match": "qwen3-vl:235b",
-      "priority": 7,
+      "priority": 13,
       "enabled": true,
       "execution": {
         "context_length": 128000,
@@ -115,7 +115,7 @@
     },
     {
       "match": "qwen3.5:397b",
-      "priority": 8,
+      "priority": 14,
       "enabled": true,
       "execution": {
         "context_length": 128000,
@@ -130,24 +130,8 @@
       }
     },
     {
-      "match": "nemotron-3-super",
-      "priority": 9,
-      "enabled": true,
-      "execution": {
-        "context_length": 1048576,
-        "max_output_tokens": 16384,
-        "supports_tools": true,
-        "supports_vision": false,
-        "family": "nvidia",
-        "temperature": 0.2,
-        "top_p": 0.9,
-        "max_tokens": 8192,
-        "timeout_seconds": 120
-      }
-    },
-    {
       "match": "gemma4:31b",
-      "priority": 10,
+      "priority": 16,
       "enabled": true,
       "execution": {
         "context_length": 128000,
@@ -158,6 +142,22 @@
         "temperature": 0.2,
         "top_p": 0.9,
         "max_tokens": 8192,
+        "timeout_seconds": 120
+      }
+    },
+    {
+      "match": "kimi",
+      "priority": 17,
+      "enabled": false,
+      "execution": {
+        "context_length": 128000,
+        "max_output_tokens": 8192,
+        "supports_tools": true,
+        "supports_vision": false,
+        "family": "kimi",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_tokens": 4096,
         "timeout_seconds": 120
       }
     }

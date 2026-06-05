@@ -4,7 +4,7 @@
     {
       "match": "nvidia/nemotron-3-super-120b-a12b:free",
       "priority": 1,
-      "enabled": true,
+      "enabled": false,
       "execution": {
         "context_length": 1000000,
         "max_output_tokens": 16384,
@@ -20,7 +20,7 @@
     {
       "match": "qwen/qwen3-coder:free",
       "priority": 2,
-      "enabled": true,
+      "enabled": false,
       "execution": {
         "context_length": 1048576,
         "max_output_tokens": 262000,
