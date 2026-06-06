@@ -115,8 +115,10 @@ internal static class OpenAiEndpoints
                         (ProviderInfo candidateProvider, string candidateUpstream) = candidates[i];
 
                         string candidateBody = modifiedRequest ?? rawBody;
-                        if (!string.Equals(candidateUpstream, effectiveModel, StringComparison.Ordinal))
-                            candidateBody = requestTransformer.ReplaceModelInRequestBody(candidateBody, candidateUpstream);
+                        // Always replace the model in the body with the upstream model.
+                        // The raw body may carry a BYOM tag suffix (e.g. ":latest") that
+                        // upstream providers don't understand.
+                        candidateBody = requestTransformer.ReplaceModelInRequestBody(candidateBody, candidateUpstream);
                         candidateBody = requestTransformer.ApplyExecutionDefaults(candidateBody, effectiveModel, candidateProvider.Name);
 
                         if (candidateProvider.Name.Equals("ollama", StringComparison.OrdinalIgnoreCase))
@@ -167,8 +169,10 @@ internal static class OpenAiEndpoints
             (ProviderInfo provider, string upstreamModel) = candidates[0];
 
             string bodyText = modifiedRequest ?? rawBody;
-            if (!string.Equals(upstreamModel, effectiveModel, StringComparison.Ordinal))
-                bodyText = requestTransformer.ReplaceModelInRequestBody(bodyText, upstreamModel);
+            // Always replace the model in the body with the upstream model.
+            // The raw body may carry a BYOM tag suffix (e.g. ":latest") that
+            // upstream providers don't understand.
+            bodyText = requestTransformer.ReplaceModelInRequestBody(bodyText, upstreamModel);
             bodyText = requestTransformer.ApplyExecutionDefaults(bodyText, effectiveModel, provider.Name);
 
             if (provider.Name.Equals("ollama", StringComparison.OrdinalIgnoreCase))

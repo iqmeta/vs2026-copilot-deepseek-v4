@@ -52,10 +52,10 @@ internal static class OllamaEndpoints
                     (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) p = modelCatalog.GetModelProfile(m);
                     return new
                     {
-                        name = m,
-                        model = m,
+                        name = m + ":latest",
+                        model = m + ":latest",
                         modified_at = DateTime.UtcNow.ToString("o"),
-                        size = 0L,
+                        size = 3_826_793_677L,
                         digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000",
                         details = new
                         {

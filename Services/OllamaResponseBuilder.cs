@@ -16,7 +16,7 @@ internal sealed class OllamaResponseBuilder
         {
             ["model"] = model,
             ["modified_at"] = DateTime.UtcNow.ToString("o"),
-            ["size"] = 0L,
+            ["size"] = 3_826_793_677L,
             ["digest"] = "sha256:0000000000000000000000000000000000000000000000000000000000000000",
             ["license"] = "NIM API",
             ["modelfile"] = $"FROM {model}",

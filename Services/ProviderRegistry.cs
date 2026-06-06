@@ -90,9 +90,23 @@ internal sealed class ProviderRegistry
     {
         if (_providers.Count == 0)
             return DefaultModel;
-        return !string.IsNullOrWhiteSpace(requestedModel) && _modelToProvider.ContainsKey(requestedModel)
-            ? requestedModel
-            : DefaultModel;
+
+        if (!string.IsNullOrWhiteSpace(requestedModel))
+        {
+            // Strip Ollama-style tag suffix (e.g., "deepseek-v4-pro:latest" → "deepseek-v4-pro")
+            string cleanModel = StripTagSuffix(requestedModel);
+            if (_modelToProvider.ContainsKey(cleanModel))
+                return cleanModel;
+        }
+
+        return DefaultModel;
+    }
+
+    /// <summary>Removes the tag portion of an Ollama model name (e.g. "model:latest" → "model").</summary>
+    private static string StripTagSuffix(string model)
+    {
+        int colonIdx = model.IndexOf(':');
+        return colonIdx > 0 ? model[..colonIdx] : model;
     }
 
     internal string ResolveUpstreamModel(string? requestedModel)
