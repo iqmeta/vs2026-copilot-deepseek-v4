@@ -105,7 +105,7 @@ internal static class OllamaEndpoints
             return Results.Json(ollamaResponseBuilder.BuildOllamaShowResponse(resolved), JsonDefaults.SnakeCase);
         });
 
-        app.MapPost("/api/chat", async (
+        app.MapPost("api/chat", async (
             HttpContext ctx,
             ProviderRegistry providerRegistry,
             ModelCatalogService modelCatalog,
@@ -140,7 +140,7 @@ internal static class OllamaEndpoints
                 {
                     using StringContent ollamaContent = new(upstreamBody, Encoding.UTF8, "application/json");
                     using HttpResponseMessage ollamaResp = await ollamaProvider.Client.SendAsync(
-                        new HttpRequestMessage(HttpMethod.Post, "/api/chat") { Content = ollamaContent }, ollamaCt);
+                        new HttpRequestMessage(HttpMethod.Post, "api/chat") { Content = ollamaContent }, ollamaCt);
                     string ollamaRespBody = await ollamaResp.Content.ReadAsStringAsync(ct);
                     // Fallback: copy `thinking` into `content` for reasoning models that leave content empty.
                     ollamaRespBody = EnsureOllamaContentFromThinking(ollamaRespBody);
@@ -155,7 +155,7 @@ internal static class OllamaEndpoints
                 ctx.Response.Headers["X-Accel-Buffering"] = "no";
 
                 using StringContent ollamaStreamContent = new(upstreamBody, Encoding.UTF8, "application/json");
-                using HttpRequestMessage ollamaStreamReq = new(HttpMethod.Post, "/api/chat") { Content = ollamaStreamContent };
+                using HttpRequestMessage ollamaStreamReq = new(HttpMethod.Post, "api/chat") { Content = ollamaStreamContent };
                 using HttpResponseMessage ollamaStreamResp = await ollamaProvider.Client.SendAsync(
                     ollamaStreamReq, HttpCompletionOption.ResponseHeadersRead, ollamaCt);
 
@@ -194,7 +194,7 @@ internal static class OllamaEndpoints
             if (!isStream)
             {
                 using HttpResponseMessage resp = await ollamaProvider.Client.SendAsync(
-                    new HttpRequestMessage(HttpMethod.Post, "/v1/chat/completions") { Content = reqContent }, ollamaCt);
+                    new HttpRequestMessage(HttpMethod.Post, "v1/chat/completions") { Content = reqContent }, ollamaCt);
                 string respBody = await resp.Content.ReadAsStringAsync(ct);
 
                 if (!resp.IsSuccessStatusCode)
@@ -233,7 +233,7 @@ internal static class OllamaEndpoints
                 ctx.Response.ContentType = "application/x-ndjson";
                 ctx.Response.Headers["X-Accel-Buffering"] = "no";
 
-                using HttpRequestMessage upstreamReq = new(HttpMethod.Post, "/v1/chat/completions")
+                using HttpRequestMessage upstreamReq = new(HttpMethod.Post, "v1/chat/completions")
                 {
                     Content = reqContent
                 };

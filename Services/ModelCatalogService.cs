@@ -333,7 +333,7 @@ internal sealed class ModelCatalogService
         try
         {
             string modelsPath = provider.Name.Equals("ollama", StringComparison.OrdinalIgnoreCase)
-                ? "/api/tags"
+                ? "api/tags"
                 : "v1/models";
 
             using HttpResponseMessage resp = await provider.Client.GetAsync(modelsPath, ct);
