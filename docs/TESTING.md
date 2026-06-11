@@ -27,8 +27,8 @@ The proxy includes a comprehensive test suite covering every component of the ro
 
 ### Test Statistics
 
-- **Total Tests:** 329
-- **Status:** ✅ All passing (329/329)
+- **Total Tests:** 421
+- **Status:** ✅ All passing (421/421)
 - **Framework:** xUnit 2.9.3 + `Microsoft.AspNetCore.Mvc.Testing`
 - **Coverage Areas:**
   - ✅ Endpoint routing (OpenAI `/v1/*` & Ollama `/api/*` formats)
