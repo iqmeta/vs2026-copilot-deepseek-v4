@@ -85,8 +85,8 @@ Each provider exposes **5 enabled models maximum** (a few smaller providers expo
 | **OpenAI** | `gpt-5`, `gpt-5-mini`, `gpt-4.1`, `gpt-4o`, `gpt-oss-120b` | 5 enabled |
 | **NVIDIA NIM** | `qwen/qwen3-coder-480b-a35b-instruct`, `moonshotai/kimi-k2.6`, `nvidia/nemotron-3-super-120b-a12b`, `openai/gpt-oss-120b`, `qwen/qwen3.5-397b-a17b` | 5 enabled, all top coding picks; 1M context on the 480B Qwen coder and Nemotron super |
 | **Groq** | `llama-3.3-70b-versatile`, `qwen/qwen3-32b`, `meta-llama/llama-4-scout-17b-16e-instruct`, `openai/gpt-oss-120b`, `openai/gpt-oss-20b` | 5 enabled; Groq's strength is inference speed for chat |
-| **OpenRouter** | `qwen/qwen3-coder`, `nvidia/nemotron-3-super-120b-a12b`, `nvidia/nemotron-3-ultra-550b-a55b`, `moonshotai/kimi-k2.6`, `deepseek/deepseek-v4-pro` | 5 enabled |
-| **Moonshot/Kimi** | `kimi-k2.6`, `kimi-k2.5`, `moonshot-v1-128k`, `moonshot-v1-auto`, `moonshot-v1-32k` | 5 enabled; **kimi-k2.6 and kimi-k2.5 have `override_client_params=true` (forces `temperature=1.0`)** |
+| **OpenRouter** | `qwen/qwen3.7-plus`, `qwen/qwen3-coder`, `nvidia/nemotron-3-super-120b-a12b`, `nvidia/nemotron-3-ultra-550b-a55b`, `moonshotai/kimi-k2.7-code`, `deepseek/deepseek-v4-pro` | 6 enabled |
+| **Moonshot/Kimi** | `kimi-k2.7-code`, `kimi-k2.6`, `kimi-k2.5`, `moonshot-v1-128k`, `moonshot-v1-auto` | 5 enabled; **kimi-k2.7-code, kimi-k2.6 and kimi-k2.5 have `override_client_params=true` (forces `temperature=1.0`)** |
 | **Cerebras** | `zai-glm-4.7`, `gpt-oss-120b` | 2 enabled (Cerebras has a small curated set) |
 | **Ollama Cloud** | `qwen3-coder:480b`, `qwen3-coder-next`, `devstral-2:123b`, `kimi-k2.6`, `deepseek-v4-pro` | 5 enabled; `kimi-k2.6` inherits Moonshot's force-mode |
 

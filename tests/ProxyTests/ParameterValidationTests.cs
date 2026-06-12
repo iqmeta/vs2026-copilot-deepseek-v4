@@ -250,6 +250,7 @@ public class ParameterValidationTests
     // ─── Moonshot / Kimi ────────────────────────────────────────────────
 
     [Theory]
+    [InlineData("kimi-k2.7-code")]
     [InlineData("kimi-k2.6")]
     [InlineData("kimi-k2.5")]
     [InlineData("moonshot-v1-128k")]
@@ -266,6 +267,7 @@ public class ParameterValidationTests
     }
 
     [Theory]
+    [InlineData("kimi-k2.7-code")]
     [InlineData("kimi-k2.6")]
     [InlineData("kimi-k2.5")]
     [InlineData("moonshot-v1-128k")]
@@ -280,6 +282,7 @@ public class ParameterValidationTests
     }
 
     [Theory]
+    [InlineData("kimi-k2.7-code")]
     [InlineData("kimi-k2.6")]
     [InlineData("kimi-k2.5")]
     [InlineData("moonshot-v1-128k")]
@@ -294,6 +297,7 @@ public class ParameterValidationTests
     }
 
     [Theory]
+    [InlineData("kimi-k2.7-code")]
     [InlineData("kimi-k2.6")]
     [InlineData("kimi-k2.5")]
     [InlineData("moonshot-v1-128k")]
@@ -314,6 +318,7 @@ public class ParameterValidationTests
     [InlineData("deepseek-v4-pro",   "deepseek")]
     [InlineData("deepseek-v4-flash", "deepseek")]
     [InlineData("gpt-5",             "openai")]
+    [InlineData("kimi-k2.7-code",    "moonshot")]
     [InlineData("kimi-k2.6",         "moonshot")]
     public void TopK_IsFiltered_ForNonSupportingProviders(string model, string provider)
     {
@@ -419,6 +424,7 @@ public class ParameterValidationTests
     [InlineData("qwen/qwen3-32b",            131_072, 16_384)]
     [InlineData("meta-llama/llama-4-scout-17b-16e-instruct", 10_000_000, 16_384)]
     [InlineData("openai/gpt-oss-20b",         131_072, 65_536)]
+    [InlineData("kimi-k2.7-code",            262_144, 262_144)]
     [InlineData("kimi-k2.5",          262_144, 262_144)]
     [InlineData("moonshot-v1-128k",   131_072,  32_768)]
     [InlineData("moonshot-v1-auto",   131_072,  32_768)]
@@ -492,6 +498,7 @@ public class ParameterValidationTests
     [InlineData("nvidia/nemotron-3-super-120b-a12b", "openrouter")]
     [InlineData("moonshotai/kimi-k2.6",  "openrouter")]
     [InlineData("deepseek/deepseek-v4-pro", "openrouter")]
+    [InlineData("kimi-k2.7-code", "moonshot")]
     [InlineData("kimi-k2.6",    "moonshot")]
     [InlineData("kimi-k2.5",    "moonshot")]
     [InlineData("moonshot-v1-128k", "moonshot")]
@@ -540,8 +547,8 @@ public class ParameterValidationTests
     [InlineData("openai", 5)]        // gpt-5, gpt-5-mini, gpt-4.1, gpt-4o, gpt-oss-120b
     [InlineData("nvidia", 5)]
     [InlineData("groq", 5)]
-    [InlineData("openrouter", 6)]
-    [InlineData("moonshot", 5)]
+    [InlineData("openrouter", 7)]     // qwen3.7-plus, qwen3-coder, nemotron-super, nemotron-ultra, kimi-k2.7-code, deepseek-v4-pro, kimi-k2.6
+    [InlineData("moonshot", 6)]      // kimi-k2.7-code, kimi-k2.6, kimi-k2.5, moonshot-v1-128k, moonshot-v1-auto, moonshot-v1-32k
     [InlineData("cerebras", 2)]
     [InlineData("ollama", 8)]        // 7 ollamacloud + 1 ollama.json (mistral)
     [InlineData("ollamacloud", 10)]  // 7 enabled + disabled

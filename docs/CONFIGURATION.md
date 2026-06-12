@@ -185,8 +185,8 @@ config/model-selection/
 ├── openai.json        # OpenAI          (5 enabled: gpt-5, gpt-5-mini, gpt-4.1, gpt-4o, gpt-oss-120b)
 ├── nvidia.json        # NVIDIA NIM      (5 enabled: qwen3-coder-480b, kimi-k2.6, nemotron-3-super, gpt-oss-120b, qwen3.5-397b)
 ├── groq.json          # Groq            (5 enabled: llama-3.3-70b, qwen3-32b, llama-4-scout, gpt-oss-120b, gpt-oss-20b)
-├── openrouter.json    # OpenRouter      (5 enabled: qwen3-coder, nemotron-3-super, nemotron-3-ultra, kimi-k2.6, deepseek-v4-pro)
-├── moonshot.json      # Moonshot/Kimi   (5 enabled: kimi-k2.6, kimi-k2.5, moonshot-v1-{128k,auto,32k})
+├── openrouter.json    # OpenRouter      (6 enabled: qwen3.7-plus, qwen3-coder, nemotron-3-super, nemotron-3-ultra, moonshotai/kimi-k2.7-code, deepseek-v4-pro)
+├── moonshot.json      # Moonshot/Kimi   (5 enabled: kimi-k2.7-code, kimi-k2.6, kimi-k2.5, moonshot-v1-128k, moonshot-v1-auto)
 ├── cerebras.json      # Cerebras        (2 enabled: zai-glm-4.7, gpt-oss-120b)
 └── ollamacloud.json   # Ollama Cloud    (5 enabled: qwen3-coder:480b, qwen3-coder-next, devstral-2:123b, kimi-k2.6, deepseek-v4-pro)
 ```
@@ -266,11 +266,11 @@ A model's `execution` block can declare:
 
 When `override_client_params` is `true`, the proxy **overwrites** any client-supplied value for the four numeric fields (`temperature`, `top_p`, `max_tokens`, `reasoning_effort`) with the configured one. When `false` or absent, the proxy preserves client values and only injects for missing fields.
 
-**Real-world case:** Moonshot Kimi K2.5 and K2.6 reject any request with `temperature ≠ 1.0`. The proxy uses force-mode to silently correct the value before forwarding. The relevant entries in `moonshot.json`:
+**Real-world case:** Moonshot Kimi K2.7-code, K2.6, and K2.5 reject any request with `temperature ≠ 1.0`. The proxy uses force-mode to silently correct the value before forwarding. The relevant entries in `moonshot.json`:
 
 ```json
 {
-  "match": "kimi-k2.6",
+  "match": "kimi-k2.7-code",
   "priority": 1,
   "enabled": true,
   "execution": {
@@ -411,24 +411,25 @@ All curated enabled models and their context window limits. The cap is **5 enabl
 | openai/gpt-oss-120b | 131k | 65k | OpenAI-compatible reasoning |
 | openai/gpt-oss-20b | 131k | 65k | Lighter gpt-oss |
 
-### Moonshot/Kimi (5 enabled — vision-capable Kimi)
+### Moonshot/Kimi (5 enabled — Kimi K2.7-code is the latest)
 
 | Model | Context | Max Output | Vision | Force-mode |
 |-------|---------|-----------|--------|------------|
-| kimi-k2.6 | 256k | 256k | ✅ | **true (temperature=1.0)** |
+| kimi-k2.7-code | 256k | 256k | ❌ (code-focused) | **true (temperature=1.0)** |
+| kimi-k2.6 | 256k | 256k | ❌ (code-focused) | **true (temperature=1.0)** |
 | kimi-k2.5 | 256k | 256k | ✅ | **true (temperature=1.0)** |
 | moonshot-v1-128k | 128k | 32k | ✅ | false |
 | moonshot-v1-auto | 128k | 32k | ❌ | false |
-| moonshot-v1-32k | 32k | 8k | ✅ | false |
 
-### OpenRouter (5 enabled)
+### OpenRouter (6 enabled)
 
 | Model | Context | Max Output | Notes |
 |-------|---------|-----------|-------|
+| qwen/qwen3.7-plus | 1M | 65k | Qwen 3.7 Plus, priority 1 |
 | qwen/qwen3-coder | 1M | 262k | Free-tier Qwen coder |
 | nvidia/nemotron-3-super-120b-a12b | 1M | 16k | Passthrough to NVIDIA |
 | nvidia/nemotron-3-ultra-550b-a55b | 1M | 256k | Ultra variant |
-| moonshotai/kimi-k2.6 | 256k | 256k | Vision-capable, force-mode `temperature=1.0` |
+| moonshotai/kimi-k2.7-code | 256k | 256k | Kimi 2.7 code-specialized, force-mode `temperature=1.0` |
 | deepseek/deepseek-v4-pro | 1M | 384k | DeepSeek V4 Pro |
 
 ### Cerebras (2 enabled)

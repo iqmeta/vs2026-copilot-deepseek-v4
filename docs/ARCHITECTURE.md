@@ -115,7 +115,7 @@ public IReadOnlyList<ProviderInfo> AllProviders { get; }
 public string DefaultModel { get; }
 ```
 
-**`ResolveModel()` does 3-level `provider/model` hint resolution** (see [dedicated section](#model-resolution--3-level-hint-solver) below). Once the bare upstream id is known, `ResolveCandidates()` returns every provider that offers it, ordered by `(priority asc, provider order asc)`. A qualified id like `kimi-k2.6@moonshot` short-circuits to a single-candidate list (no failover).
+**`ResolveModel()` does 3-level `provider/model` hint resolution** (see [dedicated section](#model-resolution--3-level-hint-solver) below). Once the bare upstream id is known, `ResolveCandidates()` returns every provider that offers it, ordered by `(priority asc, provider order asc)`. A qualified id like `kimi-k2.7-code@moonshot` or `kimi-k2.6@moonshot` short-circuits to a single-candidate list (no failover).
 
 **Base URLs (no `/v1` suffix):**
 
@@ -150,10 +150,10 @@ config/model-selection/
 ├── openai.json        # 5 enabled
 ├── nvidia.json        # 5 enabled
 ├── groq.json          # 5 enabled
-├── openrouter.json    # 5 enabled
-├── moonshot.json      # 5 enabled (kimi-k2.x uses force-mode)
+├── openrouter.json    # 6 enabled (qwen3.7-plus, qwen3-coder, nemotron-3-super, nemotron-3-ultra, kimi-k2.7-code, deepseek-v4-pro)
+├── moonshot.json      # 5 enabled (kimi-k2.7-code, kimi-k2.6, kimi-k2.5 — all use force-mode)
 ├── cerebras.json      # 2 enabled
-├── ollamacloud.json   # 5 enabled
+├── ollamacloud.json   # 5 enabled (includes kimi-k2.6 with force-mode inherited from Moonshot rule)
 └── ollama.json        # 1 enabled (local Ollama; same provider key as ollamacloud)
 ```
 
@@ -334,20 +334,19 @@ Client (Stream complete)
 Client (Visual Studio BYOM)
     │
     ├─> POST /api/chat
-    │   { "model": "kimi-k2.6", "messages": [...], "stream": false,
-    │     "options": { "temperature": 0.7 } }
+    │   { "model": "kimi-k2.7-code", "messages": [...], "stream": false,
+    │     "options": { "temperature": 0.3 } }
     │
     ▼
 OllamaEndpoints.cs
     │
-    ├─> ProviderRegistry.ResolveModel("kimi-k2.6") → "kimi-k2.6"
+    ├─> ProviderRegistry.ResolveModel("kimi-k2.7-code") → "kimi-k2.7-code"
     │
-    ├─> ProviderRegistry.ResolveCandidates("kimi-k2.6")
-    │   Returns: ["moonshot"] (only Moonshot offers it; OpenRouter also offers it
-    │   but moonshot wins by priority/order)
+    ├─> ProviderRegistry.ResolveCandidates("kimi-k2.7-code")
+    │   Returns: ["moonshot"] (only Moonshot offers it)
     │
     ├─> RequestTransformer.ApplyExecutionDefaults(...)
-    │   (Honours override_client_params: true → rewrites temperature: 0.7 → 1.0)
+    │   (Honours override_client_params: true → rewrites temperature: 0.3 → 1.0)
     │
     ├─> Forward to https://api.moonshot.ai/v1/chat/completions
     │   (OpenAI-compatible endpoint)
@@ -360,7 +359,7 @@ OllamaEndpoints.cs
     ▼
 Client (Ollama response)
     {
-      "model": "kimi-k2.6",
+      "model": "kimi-k2.7-code",
       "message": {"role": "assistant", "content": "..."},
       "prompt_eval_count": 42,
       "eval_count": 10,
@@ -586,7 +585,7 @@ The full 3-level behaviour is exercised by `tests/ProxyTests/ProviderModelHintTe
 
 ## Force-Mode Parameter Override
 
-Some models have hard requirements that contradict what a client might send (the canonical case: Moonshot Kimi K2.5 and K2.6 reject any request with `temperature ≠ 1.0`).
+Some models have hard requirements that contradict what a client might send (the canonical case: Moonshot Kimi K2.7-code, K2.6, and K2.5 reject any request with `temperature ≠ 1.0`).
 
 ### Mechanism
 
@@ -599,12 +598,12 @@ The `override_client_params` field on `ModelExecutionConfig` (in `Models/ModelEx
 
 When `false` or absent (the default), the client wins and the proxy only injects for missing fields.
 
-### Real-world case: Moonshot Kimi K2.6
+### Real-world case: Moonshot Kimi K2.7-code
 
 `config/model-selection/moonshot.json`:
 ```json
 {
-  "match": "kimi-k2.6",
+  "match": "kimi-k2.7-code",
   "priority": 1,
   "enabled": true,
   "execution": {
@@ -618,12 +617,12 @@ When `false` or absent (the default), the client wins and the proxy only injects
 
 The client sends:
 ```json
-{ "model": "kimi-k2.6", "temperature": 0.7, "messages": [...] }
+{ "model": "kimi-k2.7-code", "temperature": 0.3, "messages": [...] }
 ```
 
 The proxy rewrites the body before forwarding to Moonshot:
 ```json
-{ "model": "kimi-k2.6", "temperature": 1.0, "max_tokens": 4096, "messages": [...] }
+{ "model": "kimi-k2.7-code", "temperature": 1.0, "max_tokens": 4096, "messages": [...] }
 ```
 
 ### Why is this safe?
@@ -650,7 +649,7 @@ The proxy implements **graceful fallback** for non-streaming requests:
 3. **Tertiary** — ...
 4. **Final** — return 502 Bad Gateway if all candidates fail
 
-For a bare id like `kimi-k2.6` offered by both Moonshot and OpenRouter, the failover list is `["moonshot", "openrouter"]`. For a qualified id like `kimi-k2.6@moonshot`, the list is `["moonshot"]` only (no failover).
+For a bare id like `kimi-k2.6` offered by both Moonshot and OpenRouter, the failover list is `["moonshot", "openrouter"]`. For a qualified id like `kimi-k2.7-code@moonshot`, the list is `["moonshot"]` only (no failover).
 
 ### Error Conditions That Trigger Failover
 
