@@ -76,12 +76,16 @@ internal static class OllamaEndpoints
                     string providerPrefix = x.Provider.ToUpperInvariant();
                     string displayName = $"{providerPrefix} - {x.DisplayModel}";
                     string routedModel = x.Model;
+                    // Use a provider-qualified alias so that when the client sends this back
+                    // as the model name, the proxy routes it uniquely to the correct provider
+                    // instead of falling back to the default (e.g. DeepSeek).
+                    string qualifiedModel = $"{routedModel}@{x.Provider}:latest";
 
                     (int ContextLength, int MaxOutputTokens, bool SupportsTools, bool SupportsVision, string[] Capabilities, string Family) p = modelCatalog.GetModelProfile(routedModel);
                     return new
                     {
                         name = displayName + ":latest",
-                        model = routedModel + ":latest",
+                        model = qualifiedModel,
                         modified_at = DateTime.UtcNow.ToString("o"),
                         size = 3_826_793_677L,
                         digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000",
@@ -155,6 +159,12 @@ internal static class OllamaEndpoints
             string ollamaUpstreamModel = providerRegistry.ResolveUpstreamModel(ollamaEffectiveModel);
             ProviderInfo ollamaProvider = providerRegistry.ResolveProvider(ollamaEffectiveModel);
             ModelExecutionConfig ollamaExec = modelCatalog.GetExecutionConfigForModel(ollamaEffectiveModel);
+
+            // ── Diagnostic headers ───────────────────────────────────────
+            ctx.Response.Headers["X-Proxy-Requested-Model"] = ollamaRequestedModel;
+            ctx.Response.Headers["X-Proxy-Resolved-Model"] = ollamaEffectiveModel;
+            ctx.Response.Headers["X-Proxy-Upstream-Model"] = ollamaUpstreamModel;
+            ctx.Response.Headers["X-Proxy-Provider"] = ollamaProvider.Name;
 
             using CancellationTokenSource? ollamaTimeoutCts = modelCatalog.CreateModelTimeoutCts(ollamaEffectiveModel, ct);
             CancellationToken ollamaCt = ollamaTimeoutCts?.Token ?? ct;

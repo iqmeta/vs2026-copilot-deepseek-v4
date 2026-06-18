@@ -91,6 +91,17 @@ internal static class ProviderCapabilitiesRegistry
             DefaultBaseUrl: "https://api.groq.com/openai",
             EnvPrefix: "GROQ"),
 
+        // ── Multi-model providers (ZenMux - aggregator) ─────────────────────
+        ["zenmux"] = new(
+            Category: ProviderCategory.MultiModel,
+            ApiFormat: ApiFormat.OpenAi,
+            SupportsReasoningEffort: false,
+            SupportsTopK: false,
+            ChatPath: "v1/chat/completions",
+            ModelsPath: "v1/models",
+            DefaultBaseUrl: "https://zenmux.ai/api",
+            EnvPrefix: "ZENMUX"),
+
         // ── Multi-model providers (Ollama API) ───────────────────────────────
         ["ollama"] = new(
             Category: ProviderCategory.MultiModel,

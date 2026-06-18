@@ -435,8 +435,8 @@ public class ParameterValidationTests
     [InlineData("deepseek/deepseek-v4-pro",          1_048_576, 384_000)]
     [InlineData("zai-glm-4.7",  128_000, 32_768)]
     [InlineData("gpt-oss-120b", 131_072, 65_536)]
-    [InlineData("qwen3-coder:480b",  128_000, 32_768)]
-    [InlineData("qwen3-coder-next",  128_000, 32_768)]
+    [InlineData("qwen3-coder:480b",  1_000_000, 32_768)]
+    [InlineData("qwen3-coder-next",  1_000_000, 32_768)]
     [InlineData("devstral-2:123b",   128_000, 32_768)]
     [InlineData("kimi-k2.6",         262_144, 262_144)]
     public void AllModels_HaveCorrectContextWindowConfig(
@@ -528,10 +528,10 @@ public class ParameterValidationTests
         ModelSelectionStore store = new();
         var providers = store.ProviderModelSelections;
 
-        Assert.True(providers.Count >= 6,
-            $"Expected at least 6 provider configs (deepseek, openai, nvidia, groq, openrouter, moonshot), got {providers.Count}");
+        Assert.True(providers.Count >= 7,
+            $"Expected at least 7 provider configs (deepseek, openai, nvidia, groq, openrouter, moonshot, zenmux), got {providers.Count}");
 
-        string[] expected = ["deepseek", "openai", "nvidia", "groq", "openrouter", "moonshot"];
+        string[] expected = ["deepseek", "openai", "nvidia", "groq", "openrouter", "moonshot", "zenmux"];
         foreach (string name in expected)
         {
             Assert.True(providers.ContainsKey(name),
@@ -550,8 +550,9 @@ public class ParameterValidationTests
     [InlineData("openrouter", 7)]     // qwen3.7-plus, qwen3-coder, nemotron-super, nemotron-ultra, kimi-k2.7-code, deepseek-v4-pro, kimi-k2.6
     [InlineData("moonshot", 6)]      // kimi-k2.7-code, kimi-k2.6, kimi-k2.5, moonshot-v1-128k, moonshot-v1-auto, moonshot-v1-32k
     [InlineData("cerebras", 2)]
-    [InlineData("ollama", 8)]        // 7 ollamacloud + 1 ollama.json (mistral)
+    [InlineData("ollama", 10)]        // 9 ollamacloud + 1 ollama.json (mistral)
     [InlineData("ollamacloud", 10)]  // 7 enabled + disabled
+    [InlineData("zenmux", 15)]      // 15 enabled (glm-5.2-free, glm-5.2, kimi-k2.7-code-free, kimi-k2.7-code, kimi-k2.6, qwen3.7-plus, qwen3.7-max, gemini-3.5-flash, gpt-5.5-pro, gpt-5.5, deepseek-v4-pro, deepseek-v4-flash, grok-4.3, grok-build-0.1, qwen3.6-plus)
     public void EnabledModelCount_IsCorrect(string providerName, int expectedEnabled)
     {
         ModelSelectionStore store = new();
